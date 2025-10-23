@@ -1,0 +1,1 @@
+export type PanelTypes = 'instruments' | 'settings' | 'calender' | null;
