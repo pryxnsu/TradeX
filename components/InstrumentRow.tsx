@@ -1,33 +1,14 @@
 'use client';
 
-
-import { useState } from 'react';
 import { ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Instrument from './Instrument';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { InstrumentProp } from './Instruments';
 
-interface Instrument {
-    id: number;
-    symbol: string;
-    signal: 'up' | 'down';
-    bid: string;
-    ask: string;
-    change: string;
-    changePercent: string;
-    pl: string;
-    trend: 'up' | 'down' | null;
-    isFavorite: boolean;
-}
-
-interface InstrumentRowProps {
-    instrument: Instrument;
-}
-
-export function InstrumentRow({ instrument }: InstrumentRowProps) {
-    const [isFavorite, setIsFavorite] = useState(instrument.isFavorite);
-    const isPositive = instrument.changePercent.startsWith('-') === false && instrument.changePercent !== '-';
-    const isNegative = instrument.changePercent.startsWith('-') && instrument.changePercent !== '-';
+export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
+    const isPositive = instrument?.change.startsWith('-') === false && instrument.change !== '-';
+    const isNegative = instrument?.change.startsWith('-') && instrument.change !== '-';
 
     return (
         <TableRow className="select-none">
@@ -41,12 +22,12 @@ export function InstrumentRow({ instrument }: InstrumentRowProps) {
             <TableCell className="text-center">
                 <div
                     className={`inline-flex rounded p-1 ${
-                        instrument.signal === 'up'
+                        instrument?.signal === 'up'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
                     }`}
                 >
-                    {instrument.signal === 'up' ? (
+                    {instrument?.signal === 'up' ? (
                         <ArrowUp className="h-4 w-4" />
                     ) : (
                         <ArrowDown className="h-4 w-4" />
@@ -98,9 +79,9 @@ export function InstrumentRow({ instrument }: InstrumentRowProps) {
                             {instrument.change}
                         </span>
                     </div>
-                    {instrument.trend && (
+                    {instrument.signal && (
                         <div className="flex h-6 w-12 items-center justify-center">
-                            {instrument.trend === 'up' ? (
+                            {instrument.signal === 'up' ? (
                                 <TrendingUp className="h-4 w-4 text-green-600" />
                             ) : (
                                 <TrendingDown className="h-4 w-4 text-red-600" />
@@ -110,20 +91,16 @@ export function InstrumentRow({ instrument }: InstrumentRowProps) {
                 </div>
             </TableCell>
 
-            <TableCell className="font-mono text-sm">{instrument.pl}</TableCell>
+            <TableCell className="font-mono text-sm">{instrument?.pl ?? '-'}</TableCell>
 
             <TableCell className="text-right">
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsFavorite(!isFavorite)}
+                    // TODO: add request to remove from favorite
                     className="text-yellow-500 hover:text-yellow-600"
                 >
-                    <Star
-                        className="h-5 w-5"
-                        fill={isFavorite ? 'currentColor' : 'none'}
-                        stroke={isFavorite ? 'currentColor' : 'currentColor'}
-                    />
+                    <Star className="h-5 w-5" fill="currentColor" stroke="currentColor" />
                 </Button>
             </TableCell>
         </TableRow>

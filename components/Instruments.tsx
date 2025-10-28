@@ -1,91 +1,58 @@
 'use client';
 
-import { useState } from 'react';
-import { MoreVertical, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MoreVertical, Search, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PanelTypes } from '@/types';
 import { InstrumentRow } from './InstrumentRow';
 import { Input } from './ui/input';
+import { Spinner } from './ui/spinner';
 
-// for testing
-const instruments = [
-    {
-        id: 1,
-        symbol: 'AAPL',
-        signal: 'down' as const,
-        bid: '257.53',
-        ask: '257.67',
-        change: '-',
-        changePercent: '-',
-        pl: '-',
-        trend: null,
-        isFavorite: true,
-    },
-    {
-        id: 2,
-        symbol: 'EUR/USD',
-        signal: 'up' as const,
-        bid: '1.15946',
-        ask: '1.15954',
-        change: '0.11%',
-        changePercent: '-0.11%',
-        pl: '-',
-        trend: 'down' as const,
-        isFavorite: true,
-    },
-    {
-        id: 3,
-        symbol: 'GBP/USD',
-        signal: 'up' as const,
-        bid: '1.33490',
-        ask: '1.33500',
-        change: '0.01%',
-        changePercent: '-0.01%',
-        pl: '-',
-        trend: 'down' as const,
-        isFavorite: true,
-    },
-    {
-        id: 4,
-        symbol: 'USD/JPY',
-        signal: 'up' as const,
-        bid: '152.643',
-        ask: '152.653',
-        change: '0.43%',
-        changePercent: '0.43%',
-        pl: '-',
-        trend: 'up' as const,
-        isFavorite: true,
-    },
-    {
-        id: 5,
-        symbol: 'USTEC',
-        signal: 'down' as const,
-        bid: '24,947.35',
-        ask: '24,948.14',
-        change: '0.32%',
-        changePercent: '0.32%',
-        pl: '-',
-        trend: 'up' as const,
-        isFavorite: true,
-    },
-    {
-        id: 6,
-        symbol: 'USOIL',
-        signal: 'up' as const,
-        bid: '61.297',
-        ask: '61.315',
-        change: '2.14%',
-        changePercent: '2.14%',
-        pl: '-',
-        trend: 'up' as const,
-        isFavorite: true,
-    },
-];
+export interface InstrumentProp {
+    signal: string;
+    symbol: string;
+    bid: number;
+    ask: number;
+    change: string;
+    pl?: string;
+}
 
 export default function Instruments({ onClose }: { onClose: (type: PanelTypes) => void }) {
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [instruments, setInstruments] = useState<InstrumentProp[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string>('');
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/favorites`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                });
+
+                const data = await response.json();
+                setInstruments(data.data);
+            } catch (err: unknown) {
+                const errorMessage =
+                    err instanceof Error
+                        ? err.message
+                        : 'An unexpected error occurred while parsing';
+                setError(errorMessage);
+                console.error('Error in fetching instruments', err);
+            } finally {
+                setIsLoading(false);
+            }
+        })();
+    }, []);
+
+    if (error && !isLoading) {
+        return <div className="p-4">{error}</div>;
+    }
     return (
         <div className="mx-auto p-3">
             <div className="mb-6 flex items-center justify-between">
@@ -118,24 +85,36 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
             </div>
 
             <div className="bg-card h-full overflow-hidden rounded-lg">
-                <Table className="flex-1">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[200px]">Symbol</TableHead>
-                            <TableHead className="w-[80px] text-center">Signal</TableHead>
-                            <TableHead className="w-[120px]">Bid</TableHead>
-                            <TableHead className="w-[120px]">Ask</TableHead>
-                            <TableHead className="w-[150px]">1D change</TableHead>
-                            <TableHead className="w-[120px]">P/L, USD</TableHead>
-                            <TableHead className="w-[60px] text-right">★</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {instruments.map(instrument => (
-                            <InstrumentRow key={instrument.id} instrument={instrument} />
-                        ))}
-                    </TableBody>
-                </Table>
+                {isLoading ? (
+                    <div className="w-full">
+                        <Spinner className="mx-auto size-6" />
+                    </div>
+                ) : (
+                    <Table className="flex-1">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[200px]">Symbol</TableHead>
+                                <TableHead className="w-20 text-center">Signal</TableHead>
+                                <TableHead className="w-[120px]">Bid</TableHead>
+                                <TableHead className="w-[120px]">Ask</TableHead>
+                                <TableHead className="w-[150px]">1D change</TableHead>
+                                <TableHead className="w-[120px]">P/L, USD</TableHead>
+                                <TableHead className="w-[60px]">
+                                    <Star size={15} className="w-full text-center" />
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {!isLoading &&
+                                instruments?.map(instrument => (
+                                    <InstrumentRow
+                                        key={instrument?.symbol}
+                                        instrument={instrument}
+                                    />
+                                ))}
+                        </TableBody>
+                    </Table>
+                )}
             </div>
         </div>
     );
