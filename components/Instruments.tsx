@@ -25,18 +25,22 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
     const [error, setError] = useState<string>('');
 
     useEffect(() => {
-        (async () => {
+        const fetchFavoritesInstruments = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/favorites`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                });
-
-                const data = await response.json();
-                setInstruments(data.data);
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/favorites`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                    }
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    setInstruments(data.data);
+                }
             } catch (err: unknown) {
                 const errorMessage =
                     err instanceof Error
@@ -47,7 +51,8 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
             } finally {
                 setIsLoading(false);
             }
-        })();
+        };
+        fetchFavoritesInstruments();
     }, []);
 
     if (error && !isLoading) {
