@@ -5,18 +5,24 @@ import { Button } from '@/components/ui/button';
 import Instrument from './Instrument';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { InstrumentProp } from './Instruments';
+import { useInstrument } from '@/hooks/useInstrument';
 
 export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
     const isPositive = instrument?.change.startsWith('-') === false && instrument.change !== '-';
     const isNegative = instrument?.change.startsWith('-') && instrument.change !== '-';
 
+    // change selected symbol
+    const { handleChangeSymbol } = useInstrument();
     return (
         <TableRow className="select-none">
-            <TableCell className="flex items-center gap-2">
+            <TableCell
+                onClick={() => handleChangeSymbol(instrument.symbol, 'forex')}
+                className="flex items-center gap-2"
+            >
                 <span className="cursor-pointer">
                     <GripVertical size={16} />
                 </span>
-                <Instrument symbol={instrument.symbol} iconSize={20} />
+                <Instrument symbol={instrument.symbol} iconSize={25} />
             </TableCell>
 
             <TableCell className="text-center">
