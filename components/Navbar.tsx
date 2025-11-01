@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { setLocalStorage } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import FavoriteInstruments from './FavoriteInstruments';
+import { useUser } from '@/hooks/useUser';
 
 interface BalanceRow {
     label: string;
@@ -21,6 +22,7 @@ interface Account {
 }
 
 export default function Navbar() {
+    const { user } = useUser();
     const [selectedAccount, setSelectedAccount] = useState<string>('real');
 
     const balanceRows: BalanceRow[] = [
@@ -172,7 +174,7 @@ export default function Navbar() {
                     </PopoverTrigger>
                     <PopoverContent className="w-80 px-0 py-1">
                         <div className="py-2">
-                            <div className="border-b px-3 pb-4">p****@gmail.com</div>
+                            <div className="border-b px-3 pb-4">{user?.email}</div>
                             <div className="pt-3">
                                 <Button
                                     className="h-11 w-full justify-start rounded-none border-none shadow-none"
