@@ -7,12 +7,23 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { InstrumentProp } from './Instruments';
 import { useInstrument } from '@/hooks/useInstrument';
 
-export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
+export function InstrumentRow({
+    instrument,
+    flashBidColor,
+    flashAskColor,
+}: {
+    instrument: InstrumentProp;
+    flashBidColor: string | null;
+    flashAskColor: string | null;
+}) {
     const isPositive = instrument?.change.startsWith('-') === false && instrument.change !== '-';
     const isNegative = instrument?.change.startsWith('-') && instrument.change !== '-';
 
     // change selected symbol
     const { handleChangeSymbol } = useInstrument();
+
+    // one day change
+    const oneDayChange = isPositive ? '+' + instrument.change : instrument.change;
     return (
         <TableRow className="select-none">
             <TableCell
@@ -29,8 +40,8 @@ export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
                 <div
                     className={`inline-flex rounded p-1 ${
                         instrument?.signal === 'up'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-red-500 text-white'
                     }`}
                 >
                     {instrument?.signal === 'up' ? (
@@ -43,11 +54,7 @@ export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
 
             <TableCell>
                 <div
-                    className={`rounded px-2 py-1 font-mono text-sm font-semibold ${
-                        instrument.signal === 'up'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                    }`}
+                    className={`rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashBidColor}`}
                 >
                     {instrument.bid}
                 </div>
@@ -55,11 +62,7 @@ export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
 
             <TableCell>
                 <div
-                    className={`rounded px-2 py-1 font-mono text-sm font-semibold ${
-                        instrument.signal === 'up'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                    }`}
+                    className={`rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashAskColor}`}
                 >
                     {instrument.ask}
                 </div>
@@ -74,7 +77,7 @@ export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
                             <ArrowDown className="h-4 w-4 text-red-600" />
                         ) : null}
                         <span
-                            className={`font-mono text-sm font-semibold ${
+                            className={`font-mono text-xs font-semibold ${
                                 isPositive
                                     ? 'text-green-600'
                                     : isNegative
@@ -82,7 +85,7 @@ export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
                                       : 'text-foreground'
                             }`}
                         >
-                            {instrument.change}
+                            {oneDayChange}
                         </span>
                     </div>
                     {instrument.signal && (
@@ -97,14 +100,14 @@ export function InstrumentRow({ instrument }: { instrument: InstrumentProp }) {
                 </div>
             </TableCell>
 
-            <TableCell className="font-mono text-sm">{instrument?.pl ?? '-'}</TableCell>
+            <TableCell className="font-mono text-xs">{instrument?.pl ?? '-'}</TableCell>
 
             <TableCell className="text-right">
                 <Button
                     variant="ghost"
                     size="icon"
                     // TODO: add request to remove from favorite
-                    className="text-yellow-500 hover:text-yellow-600"
+                    className="text-yellow-500 hover:text-yellow-600 hover:bg-transparent cursor-pointer"
                 >
                     <Star className="h-5 w-5" fill="currentColor" stroke="currentColor" />
                 </Button>

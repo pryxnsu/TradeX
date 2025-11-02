@@ -8,6 +8,8 @@ import { PanelTypes } from '@/types';
 import { InstrumentRow } from './InstrumentRow';
 import { Input } from './ui/input';
 import { Spinner } from './ui/spinner';
+import { useSocket } from '@/hooks/useSocket';
+import { setLocalStorage } from '@/lib/localStorage';
 
 export interface InstrumentProp {
     signal: string;
@@ -23,6 +25,10 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
     const [instruments, setInstruments] = useState<InstrumentProp[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
+
+    const [flashColors, setFlashColors] = useState<
+        Map<string, { ask: string | null; bid: string | null }>
+    >(new Map());
 
     useEffect(() => {
         const fetchFavoritesInstruments = async () => {
@@ -40,6 +46,8 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                 if (response.ok) {
                     const data = await response.json();
                     setInstruments(data.data);
+                    const favSymbols = data.data.map((ins: InstrumentProp) => ins.symbol);
+                    setLocalStorage('fav-instruments', favSymbols);
                 }
             } catch (err: unknown) {
                 const errorMessage =
@@ -54,6 +62,67 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
         };
         fetchFavoritesInstruments();
     }, []);
+
+    // update prices of instrument sent by ws server
+    const { favInsSocketMsg } = useSocket();
+
+    useEffect(() => {
+        if (!favInsSocketMsg || !Array.isArray(favInsSocketMsg)) return;
+
+        setInstruments(prev => {
+            const newFlashColors = new Map<string, { ask: string | null; bid: string | null }>();
+
+            const updatedInstruments = prev.map(ins => {
+                const priceData = favInsSocketMsg.find(
+                    (msg: { symbol: string }) => msg.symbol === ins.symbol
+                );
+                if (priceData) {
+                    const askFlash =
+                        priceData.ask > ins.ask
+                            ? 'bg-green-500 text-white'
+                            : priceData.ask < ins.ask
+                              ? 'bg-red-500 text-white'
+                              : null;
+
+                    const bidFlash =
+                        priceData.bid > ins.bid
+                            ? 'bg-green-500 text-white'
+                            : priceData.bid < ins.bid
+                              ? 'bg-red-500 text-white'
+                              : null;
+
+                    // Store flash colors per symbol
+                    if (askFlash || bidFlash) {
+                        newFlashColors.set(ins.symbol, { ask: askFlash, bid: bidFlash });
+                    }
+
+                    return {
+                        ...ins,
+                        bid: priceData.bid,
+                        ask: priceData.ask,
+                    };
+                }
+                return ins;
+            });
+
+            // Update flash colors map
+            if (newFlashColors.size > 0) {
+                setFlashColors(newFlashColors);
+
+                setTimeout(() => {
+                    setFlashColors(current => {
+                        const updated = new Map(current);
+                        newFlashColors.forEach((_, symbol) => {
+                            updated.delete(symbol);
+                        });
+                        return updated;
+                    });
+                }, 500);
+            }
+
+            return updatedInstruments;
+        });
+    }, [favInsSocketMsg]);
 
     if (error && !isLoading) {
         return <div className="p-4">{error}</div>;
@@ -111,12 +180,17 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                         </TableHeader>
                         <TableBody>
                             {!isLoading &&
-                                instruments?.map(instrument => (
-                                    <InstrumentRow
-                                        key={instrument?.symbol}
-                                        instrument={instrument}
-                                    />
-                                ))}
+                                instruments?.map(instrument => {
+                                    const flash = flashColors.get(instrument.symbol);
+                                    return (
+                                        <InstrumentRow
+                                            key={instrument?.symbol}
+                                            instrument={instrument}
+                                            flashAskColor={flash?.ask || null}
+                                            flashBidColor={flash?.bid || null}
+                                        />
+                                    );
+                                })}
                         </TableBody>
                     </Table>
                 )}
