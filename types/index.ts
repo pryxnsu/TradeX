@@ -21,6 +21,15 @@ export type SocketMessageType =
       };
 
 
+// Candle 
+export interface Candle {
+    time: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+}
+
 // logged in user
 export interface User {
     id: string;

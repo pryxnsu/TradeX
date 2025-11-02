@@ -6,14 +6,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { InstrumentContext } from '@/hooks/useInstrument';
-
-interface Candle {
-    time: number;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-}
+import { Candle } from '@/types';
+import { setLocalStorage } from '@/lib/localStorage';
 
 export interface InstrumentContextType {
     selectedSymbol: string;
@@ -58,7 +52,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    // fetching history candles data of selected instrument 
+    // fetching history candles data of selected instrument
     useEffect(() => {
         const fetchCandles = async () => {
             setError('');
@@ -96,8 +90,14 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
     // update the symbol and fetch new data according to symbol
     const handleChangeSymbol = (symbol: string, type: string) => {
         setSelectedSymbol(symbol);
+        setLocalStorage('selected-symbol', symbol);
         setType(type);
     };
+
+    // saving selected array symbol in local storage 
+    useEffect(() => {
+        setLocalStorage('selected-symbol', selectedSymbol);
+    },[selectedSymbol]);
 
     const getSymbol = (symbol: string) => {
         let sym: string = '';
