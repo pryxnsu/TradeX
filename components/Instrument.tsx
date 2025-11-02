@@ -11,6 +11,7 @@ const getIconPath = (symbol: string): string => {
         usd: '/icons/usd.svg',
         eur: '/icons/eur.svg',
         jpy: '/icons/jpy.svg',
+        eth: '/icons/eth.svg',
     };
 
     return iconMap[symbolLower] || '/icons/btc.svg';
@@ -103,7 +104,7 @@ export default function Instrument({
                 )}
             </div>
             <div>
-                <p className="text-base font-medium">{symbol}</p>
+                <p className="text-sm font-medium">{symbol}</p>
             </div>
         </div>
     );
