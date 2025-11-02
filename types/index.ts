@@ -19,3 +19,15 @@ export type SocketMessageType =
               timestampMs: number;
           };
       };
+
+
+// logged in user
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    avatar: string;
+    createdAt: string;
+    updatedAt: string;
+}

@@ -1,17 +1,9 @@
 'use client';
 
 import { UserContext } from '@/hooks/useUser';
+import { setLocalStorage } from '@/lib/localStorage';
+import { User } from '@/types';
 import { useEffect, useState } from 'react';
-
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: boolean;
-    avatar: string;
-    createdAt: string;
-    updatedAt: string;
-}
 
 export interface UserContextType {
     user: User | null;
@@ -41,12 +33,13 @@ export const UserProvider: React.FC<UserProviderProp> = ({ children }) => {
                 if (response.ok) {
                     const data = await response.json();
                     setUser(data.user);
+                    setLocalStorage("user", data.user);
                 }
             } catch (err: unknown) {
                 const errorMessage =
                     err instanceof Error
                         ? err.message
-                        : 'Something went wrong while fetching error';
+                        : 'Something went wrong while fetching user';
                 setError(errorMessage);
                 setIsAuthenticated(false);
                 setUser(null);
