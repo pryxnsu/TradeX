@@ -11,7 +11,7 @@ export type SocketMessageType =
     | {
           unsubscribe: {
               event: string;
-              symbol: string;
+              symbols: string[];
           };
       }
     | {
