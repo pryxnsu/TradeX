@@ -7,16 +7,17 @@ import { getLocalStorage } from '@/lib/localStorage';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
-interface FavInsSocketMsgProp {
+export interface IncomingInsSocketMsgProp {
     symbol: string;
     bid: number;
     ask: number;
+    time: number;
 }
 
 export interface SocketContextType {
     socketRef: React.RefObject<WebSocket | null>;
     isConnected: boolean;
-    favInsSocketMsg: FavInsSocketMsgProp[] | null;
+    incomingInsSocketMsg: IncomingInsSocketMsgProp[] | null;
     send: (data: SocketMessageType) => void;
 }
 
@@ -27,8 +28,10 @@ interface SockerProviderProp {
 export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
-    const [favInsSocketMsg, setFavInsSocketMsg] = useState<FavInsSocketMsgProp[] | null>(null);
-    const priceCache = useRef(new Map<string, FavInsSocketMsgProp>());
+    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<
+        IncomingInsSocketMsgProp[] | null
+    >(null);
+    const priceCacheRef = useRef(new Map<string, IncomingInsSocketMsgProp>());
 
     // send message to ws server
     const send = useCallback((msg: SocketMessageType) => {
@@ -43,19 +46,25 @@ export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
         }
     }, []);
 
-    // subscribe instrument
-    const subscribeInstruments = useCallback(
-        (symbols: string[]) => {
-            const subscribeMessage = {
-                subscribe: {
-                    event: 'instruments',
-                    symbols,
-                },
-            };
+    // send subscribe or unsubscribe instruments and chart event message to ws server
+    const subOrUnsubInstruments = useCallback(
+        (action: 'subscribe' | 'unsubscribe', event: string, symbols: string[]) => {
+            let message: SocketMessageType;
+            if (action === 'subscribe') {
+                // subscribe multiple instruments -> favorite instruments
+                message = {
+                    subscribe: { event, symbols },
+                };
+            } else {
+                // unsubscribe multiple instruments -> favorite instruments
+                message = {
+                    unsubscribe: { event, symbols },
+                };
+            }
             try {
-                send(subscribeMessage);
+                send(message);
             } catch (err: unknown) {
-                console.error('[Error] occurred in subscribe instrument', err);
+                console.error(`[Error] in ${action} instruments: ${err}`);
             }
         },
         [send]
@@ -81,7 +90,7 @@ export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
 
                     if (favInstrumentsOfUser) {
                         // send event of subscribe favorite symbols
-                        subscribeInstruments(favInstrumentsOfUser);
+                        subOrUnsubInstruments('subscribe', 'instruments', favInstrumentsOfUser);
                     }
                 };
 
@@ -97,7 +106,6 @@ export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
 
                 socket.onmessage = async ({ data }) => {
                     const parsedData = JSON.parse(data);
-                    console.log(parsedData);
                     switch (parsedData.event) {
                         case 'subscribe': {
                             console.log(`Socket: Subcribed to: ${favInstrumentsOfUser}`);
@@ -112,15 +120,10 @@ export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
                         default: {
                             // Favorite instrument data
                             if (parsedData['bid']) {
-                                const priceData = parsedData as {
-                                    symbol: string;
-                                    bid: number;
-                                    ask: number;
-                                };
-                                priceCache.current.set(parsedData.symbol, priceData);
+                                const priceData = parsedData as IncomingInsSocketMsgProp;
+                                priceCacheRef.current.set('instruments', priceData);
                                 break;
-                            } else if (parsedData['open']) {
-                                console.log('candle instrument triggered');
+                            } else {
                                 break;
                             }
                         }
@@ -137,15 +140,15 @@ export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
                 socketRef.current.close();
             }
         };
-    }, [subscribeInstruments]);
+    }, [subOrUnsubInstruments]);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (priceCache.current.size > 0) {
+            if (priceCacheRef.current.size > 0) {
                 const latestPrices = Array.from(
-                    priceCache.current.values()
-                ) as FavInsSocketMsgProp[];
-                setFavInsSocketMsg(latestPrices);
+                    priceCacheRef.current.values()
+                ) as IncomingInsSocketMsgProp[];
+                setIncomingInsSocketMsg(latestPrices);
             }
         }, 500);
         return () => clearInterval(intervalId);
@@ -154,7 +157,7 @@ export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
     const value = {
         socketRef,
         isConnected,
-        favInsSocketMsg,
+        incomingInsSocketMsg,
         send,
     };
     return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;

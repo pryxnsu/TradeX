@@ -64,16 +64,16 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
     }, []);
 
     // update prices of instrument sent by ws server
-    const { favInsSocketMsg } = useSocket();
+    const { incomingInsSocketMsg } = useSocket();
 
     useEffect(() => {
-        if (!favInsSocketMsg || !Array.isArray(favInsSocketMsg)) return;
+        if (!incomingInsSocketMsg || !Array.isArray(incomingInsSocketMsg)) return;
 
         setInstruments(prev => {
             const newFlashColors = new Map<string, { ask: string | null; bid: string | null }>();
 
             const updatedInstruments = prev.map(ins => {
-                const priceData = favInsSocketMsg.find(
+                const priceData = incomingInsSocketMsg.find(
                     (msg: { symbol: string }) => msg.symbol === ins.symbol
                 );
                 if (priceData) {
@@ -122,7 +122,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
 
             return updatedInstruments;
         });
-    }, [favInsSocketMsg]);
+    }, [incomingInsSocketMsg]);
 
     if (error && !isLoading) {
         return <div className="p-4">{error}</div>;
