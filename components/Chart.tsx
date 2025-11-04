@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
     IChartApi,
     ISeriesApi,
@@ -10,6 +10,9 @@ import {
 } from 'lightweight-charts';
 import { useInstrument } from '@/hooks/useInstrument';
 import type { Time } from 'lightweight-charts';
+import { Candle } from '@/types';
+import { useSocket } from '@/hooks/useSocket';
+import { IncomingInsSocketMsgProp } from '@/context/socket.context';
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -30,9 +33,11 @@ export default function Chart() {
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+    const candlesRef = useRef<Candle[]>([]);
+    const lastCandleRef = useRef<Candle | null>(null);
 
     // candles
-    const { candles } = useInstrument();
+    const { candles, selectedSymbol, timeFrame } = useInstrument();
 
     useEffect(() => {
         const chart = createChart(containerRef.current!, chartOptions);
@@ -74,7 +79,6 @@ export default function Chart() {
         if (!container || !chartRef.current) return;
 
         const resizeObserver = new ResizeObserver(entries => {
-            // console.log('enr', entries)
             for (const entry of entries) {
                 const { width, height } = entry.contentRect;
                 if (chartRef.current) {
@@ -100,6 +104,73 @@ export default function Chart() {
             seriesRef.current.setData(formattedData);
         }
     }, [candles]);
+
+    // --------------------------------- form candles realtime  ---------------------------------
+
+    // new candle starts.
+    const getStartCandle = (timestamp: number, timeFrameMinutes: number) => {
+        const intervalMs = timeFrameMinutes * 60_000;
+        return Math.floor(timestamp / intervalMs) * intervalMs;
+    };
+
+    // form candles 
+    const handleTick = useCallback(
+        (tick: IncomingInsSocketMsgProp) => {
+            
+            if (tick.symbol !== selectedSymbol) return;
+
+            const price = (tick.ask + tick.bid) / 2;
+            const ts = getStartCandle(tick.time, timeFrame);
+
+            const last = lastCandleRef.current;
+            if (!last || last.time !== ts) {
+                const newCandle: Candle = {
+                    time: ts,
+                    open: price,
+                    high: price,
+                    low: price,
+                    close: price,
+                };
+
+                candlesRef.current.push(newCandle);
+                lastCandleRef.current = newCandle;
+
+                seriesRef.current?.update({
+                    time: newCandle.time as unknown as Time,
+                    open: newCandle.open,
+                    high: newCandle.high,
+                    low: newCandle.low,
+                    close: newCandle.close,
+                });
+                return;
+            }
+
+            last.close = price;
+            last.high = Math.max(last.high, price);
+            last.low = Math.min(last.low, price);
+
+            seriesRef.current?.update({
+                time: last.time as Time,
+                open: last.open,
+                high: last.high,
+                low: last.low,
+                close: last.close,
+            });
+        },
+        [lastCandleRef, selectedSymbol, timeFrame]
+    );
+
+
+    // rendering candle
+    const { incomingInsSocketMsg } = useSocket();
+
+    useEffect(() => {
+        if (!incomingInsSocketMsg) return;
+
+        incomingInsSocketMsg.forEach((tick: IncomingInsSocketMsgProp) => {
+            handleTick(tick);
+        });
+    }, [handleTick, incomingInsSocketMsg]);
 
     return (
         <div className="flex h-full w-full flex-col overflow-hidden">

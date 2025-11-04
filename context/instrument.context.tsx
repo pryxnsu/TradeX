@@ -12,9 +12,11 @@ import { setLocalStorage } from '@/lib/localStorage';
 export interface InstrumentContextType {
     selectedSymbol: string;
     candles: Candle[];
+    setCandles: (candle: Candle[]) => void;
     isLoading: boolean;
     error: string;
     handleChangeSymbol: (symbol: string, type: string) => void;
+    timeFrame: number;
     setTimeFrame: (tf: number) => void;
 }
 
@@ -43,7 +45,7 @@ function calculateFrom(interval: number, count: number) {
 }
 
 export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children }) => {
-    const [selectedSymbol, setSelectedSymbol] = useState<string>('AAPL');
+    const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USD');
     const [type, setType] = useState<string>('stock');
     const [candles, setCandles] = useState<Candle[]>([]);
     const [timeFrame, setTimeFrame] = useState(5); // 5min // measuring in unit minutes
@@ -57,7 +59,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         const fetchCandles = async () => {
             setError('');
             setIsLoading(true);
-            const sym = getSymbol(selectedSymbol);
+            const sym = normalizeSymbol(selectedSymbol);
             try {
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/${sym}/${type}/candles?time_frame=${timeFrame}&from=${from}&count=${count}`,
@@ -94,27 +96,20 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         setType(type);
     };
 
-    // saving selected array symbol in local storage 
+    // saving selected array symbol in local storage
     useEffect(() => {
         setLocalStorage('selected-symbol', selectedSymbol);
-    },[selectedSymbol]);
+    }, [selectedSymbol]);
 
-    const getSymbol = (symbol: string) => {
-        let sym: string = '';
-        if (symbol.includes('/')) {
-            sym += symbol.split('/')[0];
-            sym += symbol.split('/')[1];
-        } else {
-            sym = symbol;
-        }
-        return sym;
-    };
+    const normalizeSymbol = (sym: string) => (sym.includes('/') ? sym.replace('/', '') : sym);
 
     const value = {
         selectedSymbol,
         candles,
+        setCandles,
         isLoading,
         error,
+        timeFrame,
         setTimeFrame,
         handleChangeSymbol,
     };

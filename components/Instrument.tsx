@@ -1,3 +1,5 @@
+'use client';
+
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -14,7 +16,7 @@ const getIconPath = (symbol: string): string => {
         eth: '/icons/eth.svg',
     };
 
-    return iconMap[symbolLower] || '/icons/btc.svg';
+    return iconMap[symbolLower] || '';
 };
 
 export default function Instrument({
