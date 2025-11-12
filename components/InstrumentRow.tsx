@@ -16,8 +16,8 @@ export function InstrumentRow({
     flashBidColor: string | null;
     flashAskColor: string | null;
 }) {
-    const isPositive = instrument?.change.startsWith('-') === false && instrument.change !== '-';
-    const isNegative = instrument?.change.startsWith('-') && instrument.change !== '-';
+    const isPositive = String(instrument?.change).startsWith('-') === false && String(instrument.change) !== '-';
+    const isNegative = String(instrument?.change).startsWith('-') && String(instrument.change) !== '-';
 
     // change selected symbol
     const { handleChangeSymbol } = useInstrument();

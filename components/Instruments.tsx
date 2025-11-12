@@ -11,12 +11,14 @@ import { Spinner } from './ui/spinner';
 import { useSocket } from '@/hooks/useSocket';
 import { setLocalStorage } from '@/lib/localStorage';
 
-export interface InstrumentProp {
+export interface InstrumentProp {    
+    id: string;
+    sortOrder: number;
     signal: string;
     symbol: string;
     bid: number;
     ask: number;
-    change: string;
+    change: number;
     pl?: string;
 }
 
