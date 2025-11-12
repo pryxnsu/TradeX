@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 export interface UserContextType {
     user: User | null;
     isAuthenticated: boolean;
+    isLoading: boolean;
+    error: string;
 }
 
 interface UserProviderProp {
@@ -33,13 +35,12 @@ export const UserProvider: React.FC<UserProviderProp> = ({ children }) => {
                 if (response.ok) {
                     const data = await response.json();
                     setUser(data.user);
-                    setLocalStorage("user", data.user);
+                    setIsAuthenticated(true);
+                    setLocalStorage('user', data.user);
                 }
             } catch (err: unknown) {
                 const errorMessage =
-                    err instanceof Error
-                        ? err.message
-                        : 'Something went wrong while fetching user';
+                    err instanceof Error ? err.message : 'Something went wrong while fetching user';
                 setError(errorMessage);
                 setIsAuthenticated(false);
                 setUser(null);
