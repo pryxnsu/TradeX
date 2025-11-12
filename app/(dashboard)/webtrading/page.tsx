@@ -13,6 +13,7 @@ import { ImperativePanelHandle } from 'react-resizable-panels';
 import { PanelTypes } from '@/types';
 import BidPanel from '@/components/BidPanel';
 import Positions from '@/components/Positions';
+import WalletBalance from '@/components/Balance';
 
 const BUTTONS = [
     {
@@ -131,32 +132,7 @@ export default function Page() {
                         </ResizablePanelGroup>
 
                         {/* wallet balance */}
-                        <footer className="mt-1 flex h-12 gap-6 rounded-tl-sm bg-white px-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-neutral-600">Equity:</span>
-                                <span className="text-sm font-medium text-neutral-900">
-                                    1000.00 USD
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-neutral-600">Free margin:</span>
-                                <span className="text-sm font-medium text-neutral-900">
-                                    1000.00 USD
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-neutral-600">Balance:</span>
-                                <span className="text-sm font-medium text-neutral-900">
-                                    1000.00 USD
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-neutral-600">Margin:</span>
-                                <span className="text-sm font-medium text-neutral-900">
-                                    1000.00 USD
-                                </span>
-                            </div>
-                        </footer>
+                        <WalletBalance />
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </main>

@@ -20,8 +20,7 @@ export type SocketMessageType =
           };
       };
 
-
-// Candle 
+// Candle
 export interface Candle {
     time: number;
     open: number;
@@ -39,4 +38,18 @@ export interface User {
     avatar: string;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface Wallet {
+    id: string;
+    type: 'demo' | 'real';
+    balance: number;
+    equity: number;
+    margin: number;
+    freeMargin: number;
+    currency: string;
+    leverage: number;
+    userId: string;
+    createdAt: Date;
+    updatedAt: Date;
 }

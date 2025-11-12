@@ -1,59 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, ChevronRight, Info, LogOut, UserCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronRight, LogOut, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { setLocalStorage } from '@/lib/localStorage';
-import { cn } from '@/lib/utils';
 import FavoriteInstruments from './FavoriteInstruments';
 import { useUser } from '@/hooks/useUser';
+import { useAccount } from '@/hooks/useAccount';
 
-interface BalanceRow {
-    label: string;
-    value: string;
-}
-
-interface Account {
-    type: 'Real' | 'Demo';
-    id: string;
-    balance: string;
-    color: string;
-}
+const MENU_ITEMS = [
+    { label: 'Manage Accounts', icon: true },
+    { label: 'Transaction History', icon: true },
+    { label: 'Download Trading Log', icon: true },
+];
 
 export default function Navbar() {
     const { user } = useUser();
-    const [selectedAccount, setSelectedAccount] = useState<string>('real');
-
-    const balanceRows: BalanceRow[] = [
-        { label: 'Balance', value: '0.00 USD' },
-        { label: 'Equity', value: '0.00 USD' },
-        { label: 'Margin', value: '0.00 USD' },
-        { label: 'Free margin', value: '0.00 USD' },
-        { label: 'Margin level', value: '-' },
-        { label: 'Account leverage', value: '1:200' },
-    ];
-
-    const accounts: Account[] = [
-        {
-            type: 'Real',
-            id: '128260396',
-            balance: '0.00 USD',
-            color: 'bg-yellow-100 text-yellow-700',
-        },
-        {
-            type: 'Demo',
-            id: '272638969',
-            balance: '10,029.62 USD',
-            color: 'bg-green-100 text-green-700',
-        },
-    ];
-
-    const menuItems = [
-        { label: 'Manage Accounts', icon: true },
-        { label: 'Transaction History', icon: true },
-        { label: 'Download Trading Log', icon: true },
-    ];
+    const { wallet } = useAccount();
     return (
         <div className="flex w-full items-center justify-between px-4 py-3">
             <div className="flex items-center justify-between gap-6">
@@ -76,39 +39,36 @@ export default function Navbar() {
                                     <div
                                         className={cn(
                                             'rounded-xs px-1 py-[2px] text-xs font-medium',
-                                            selectedAccount == 'real'
+                                            wallet?.type == 'real'
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-yellow-600 text-yellow-200'
                                         )}
                                     >
-                                        {selectedAccount[0].toLocaleUpperCase() +
-                                            selectedAccount.slice(1)}
+                                        {wallet?.type.toUpperCase() || 'Demo'}
                                     </div>
                                     <span className="text-xs text-black">Standard</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold">0.00 USD</span>
+                                    <span className="font-semibold">
+                                        {wallet?.equity.toLocaleString() || 0.0}{' '}
+                                        {wallet?.currency || 'USD'}
+                                    </span>
                                     <ChevronDown />
                                 </div>
                             </div>
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 px-3 py-2">
+                    <PopoverContent className="w-80 px-4 py-3">
                         <div className="mx-auto w-full max-w-md">
                             <div className="space-y-2">
-                                {balanceRows.map((row, index) => (
-                                    <div key={index} className="flex items-center justify-between">
-                                        <span className="text-gray-600">{row.label}</span>
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-medium text-gray-900">
-                                                {row.value}
-                                            </span>
-                                            <button className="text-gray-400 transition-colors hover:text-gray-600">
-                                                <Info size={20} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                <BalanceRow name="Balance" value={wallet?.balance || 0.0} />
+                                <BalanceRow name="Equity" value={wallet?.equity || 0.0} />
+                                <BalanceRow name="Margin" value={wallet?.margin || 0.0} />
+                                <BalanceRow name="Free Margin" value={wallet?.freeMargin || 0.0} />
+                                <BalanceRow
+                                    name="Account Leverage"
+                                    value={`1:${wallet?.leverage || 0}`}
+                                />
                             </div>
 
                             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -116,50 +76,13 @@ export default function Navbar() {
                                 <Button variant="outline">Deposit</Button>
                             </div>
 
-                            <div className="mt-5">
-                                <h3 className="mb-2 text-sm text-gray-600">Choose an account</h3>
-                                <div className="space-y-3">
-                                    {accounts.map(account => (
-                                        <Button
-                                            variant={'outline'}
-                                            key={account.type}
-                                            onClick={() => {
-                                                setSelectedAccount(account.type.toLowerCase());
-                                                setLocalStorage('active:account', account.id);
-                                            }}
-                                            className={`h-fit w-full justify-start rounded-lg border py-1 transition-colors ${
-                                                selectedAccount === account.type.toLowerCase() &&
-                                                'bg-neutral-100'
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="text-left">
-                                                    <div className="mb-1 flex items-center gap-2">
-                                                        <span
-                                                            className={`rounded px-2 py-1 text-xs font-semibold ${account.color}`}
-                                                        >
-                                                            {account.type}
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            #{account.id} Standard
-                                                        </span>
-                                                    </div>
-                                                    <div className="font-semibold text-gray-900">
-                                                        {account.balance}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
                             <div className="mt-5 border-t border-gray-200">
-                                {menuItems.map((item, index) => (
+                                {MENU_ITEMS.map(item => (
                                     <button
-                                        key={index}
+                                        key={item.label}
                                         className="flex w-full items-center justify-between border-b border-gray-200 py-2 text-gray-900 transition-colors last:border-b-0 hover:bg-gray-50"
                                     >
-                                        <span className="font-medium">{item.label}</span>
+                                        <span className="text-sm font-medium">{item.label}</span>
                                         <ChevronRight size={20} className="text-gray-400" />
                                     </button>
                                 ))}
@@ -193,6 +116,17 @@ export default function Navbar() {
                         Deposit now
                     </Button>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function BalanceRow({ name, value }: { name: string; value: string | number | undefined }) {
+    return (
+        <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">{name}</span>
+            <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-900">{value?.toLocaleString()}</span>
             </div>
         </div>
     );
