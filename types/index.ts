@@ -53,3 +53,27 @@ export interface Wallet {
     createdAt: Date;
     updatedAt: Date;
 }
+
+interface PositionProp {
+    symbol: string;
+    type: number;
+    volume: number;
+    openPrice: number;
+    tp: number;
+    sl: number;
+    position: string;
+    openTime: Date;
+    swap: number;
+    pnl: number;
+}
+
+// close position
+export interface ClosedPositonProp extends PositionProp {
+    dealId: string;
+    closePrice: number;
+    closeTime: Date;
+    marginRate: number;
+    commission: number;
+    fee: number;
+    reason: number;
+}

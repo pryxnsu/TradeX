@@ -1,3 +1,4 @@
+'use client';
 /**
  * show all active, closed and pendind positions of user
  */
@@ -10,7 +11,8 @@ import {
     OPENED_SIZE_OF_POSITION_PANEL,
 } from '@/app/(dashboard)/webtrading/page';
 import { ImperativePanelHandle } from 'react-resizable-panels';
-import { RefObject } from 'react';
+import { RefObject, useState } from 'react';
+import ClosedPositions from './ClosedPositions';
 
 export default function Positions({
     positionPanelOpen,
@@ -19,8 +21,14 @@ export default function Positions({
     positionPanelOpen: boolean;
     positionPanelRef: RefObject<ImperativePanelHandle | null>;
 }) {
+    const [activePositionTab, setActivePositionTab] = useState('open');
     return (
-        <Tabs defaultValue="open" className="mt-1 flex h-full flex-col px-2">
+        <Tabs
+            value={activePositionTab}
+            onValueChange={setActivePositionTab}
+            defaultValue="open"
+            className="mt-1 flex h-full flex-col px-2"
+        >
             <TabsList className="flex h-fit w-full shrink-0 items-center justify-between gap-4 rounded-none bg-transparent">
                 <div className="space-x-5">
                     <TabsTrigger value="open">Open</TabsTrigger>
@@ -52,13 +60,13 @@ export default function Positions({
                 )}
             </TabsList>
             <TabsContent value="open" className="flex-1 overflow-auto">
-                Open
+                Open Positions (Coming soon)
             </TabsContent>
             <TabsContent value="pending" className="flex-1 overflow-auto">
-                Pending
+                Pending Positions (Coming soon)
             </TabsContent>
             <TabsContent value="closed" className="flex-1 overflow-auto">
-                Closed
+                <ClosedPositions activeTab={activePositionTab} />
             </TabsContent>
         </Tabs>
     );
