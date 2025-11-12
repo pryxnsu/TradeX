@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { InstrumentContext } from '@/hooks/useInstrument';
 import { Candle } from '@/types';
 import { setLocalStorage } from '@/lib/localStorage';
+import { normalizeSymbol } from '@/lib/helper';
 
 export interface InstrumentContextType {
     selectedSymbol: string;
@@ -99,9 +100,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
     // saving selected array symbol in local storage
     useEffect(() => {
         setLocalStorage('selected-symbol', selectedSymbol);
-    }, [selectedSymbol]);
-
-    const normalizeSymbol = (sym: string) => (sym.includes('/') ? sym.replace('/', '') : sym);
+    }, [selectedSymbol]);    
 
     const value = {
         selectedSymbol,
