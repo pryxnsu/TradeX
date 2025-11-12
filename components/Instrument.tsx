@@ -47,7 +47,7 @@ export default function Instrument({
                         style={{ width: `${iconSize}px`, height: `${iconSize}px` }}
                     >
                         <div
-                            className="absolute overflow-hidden rounded-full"
+                            className="absolute overflow-hidden rounded-full ring-[1px] ring-neutral-300"
                             style={{
                                 width: `${iconSize * 0.7}px`,
                                 height: `${iconSize * 0.7}px`,
@@ -67,7 +67,7 @@ export default function Instrument({
                             />
                         </div>
                         <div
-                            className="absolute overflow-hidden rounded-full"
+                            className="absolute overflow-hidden rounded-full ring-[1px] ring-neutral-300"
                             style={{
                                 width: `${iconSize * 0.7}px`,
                                 height: `${iconSize * 0.7}px`,
