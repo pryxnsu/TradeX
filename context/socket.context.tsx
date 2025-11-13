@@ -21,11 +21,11 @@ export interface SocketContextType {
     send: (data: SocketMessageType) => void;
 }
 
-interface SockerProviderProp {
+interface SocketProviderProp {
     children: React.ReactNode;
 }
 
-export const SockerProvider: React.FC<SockerProviderProp> = ({ children }) => {
+export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<
