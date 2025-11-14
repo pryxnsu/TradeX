@@ -4,6 +4,7 @@ import { ClosedPositonProp } from '@/types';
 import { useEffect, useState } from 'react';
 import Position from './Position';
 import { Spinner } from './ui/spinner';
+import { BriefcaseBusiness } from 'lucide-react';
 
 export default function ClosedPositions({ activeTab }: { activeTab: string }) {
     const [closedPositions, setClosedPositions] = useState<ClosedPositonProp[]>([]);
@@ -48,6 +49,17 @@ export default function ClosedPositions({ activeTab }: { activeTab: string }) {
 
         fetchClosedPositions();
     }, []);
+
+    if (closedPositions.length === 0) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                <div>
+                    <BriefcaseBusiness size={35} className="mx-auto" />
+                    <p className="mt-3">No closed positions</p>
+                </div>
+            </div>
+        );
+    }
 
     if (error) {
         return <div className="mt-1 w-full text-center font-medium text-red-500">{error}</div>;
