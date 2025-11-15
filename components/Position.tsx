@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit2, X } from 'lucide-react';
-import { ClosedPositonProp } from '@/types';
+import { ClosedPositonProp, OpenPositionProp } from '@/types';
 import { getDate } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import Instrument from './Instrument';
@@ -20,55 +20,31 @@ export default function Position({
     p,
 }: {
     activeTab: string;
-    p: ClosedPositonProp[];
+    p: OpenPositionProp[] | ClosedPositonProp[];
 }) {
     return (
-        <div className="h-full bg-card overflow-hidden rounded-md">
-            <div className="overflow-x-auto">
-                <Table className='h-full'>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow className="border-border hover:bg-muted/50">
-                            <TableHead className="text-foreground font-semibold">Symbol</TableHead>
-                            <TableHead className="text-foreground font-semibold">Type</TableHead>
-                            <TableHead className="text-foreground text-right font-semibold">
-                                Volume, lot
-                            </TableHead>
-                            <TableHead className="text-foreground text-right font-semibold">
-                                Open Price
-                            </TableHead>
+        <div className="bg-card flex h-full flex-col overflow-hidden rounded-md pb-2">
+            <div className="flex-1 overflow-auto">
+                <Table>
+                    <TableHeader className="sticky top-0 z-10">
+                        <TableRow className="border-border">
+                            <TableHead>Symbol</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Volume, lot</TableHead>
+                            <TableHead>Open Price</TableHead>
                             {activeTab === 'closed' ? (
-                                <TableHead className="text-foreground text-right font-semibold">
-                                    Close Price
-                                </TableHead>
+                                <TableHead>Close Price</TableHead>
                             ) : (
-                                <TableHead className="text-foreground text-right font-semibold">
-                                    Current Price
-                                </TableHead>
+                                <TableHead>Current Price</TableHead>
                             )}
-                            <TableHead className="text-foreground font-semibold">T/P</TableHead>
-                            <TableHead className="text-foreground font-semibold">S/L</TableHead>
-                            <TableHead className="text-foreground font-semibold">
-                                Position
-                            </TableHead>
-                            <TableHead className="text-foreground font-semibold">
-                                Open Time
-                            </TableHead>
-                            {activeTab === 'closed' && (
-                                <TableHead className="text-foreground font-semibold">
-                                    Close Time
-                                </TableHead>
-                            )}
-                            <TableHead className="text-foreground text-right font-semibold">
-                                Swap, USD
-                            </TableHead>
-                            <TableHead className="text-foreground text-right font-semibold">
-                                P/L, USD
-                            </TableHead>
-                            {activeTab === 'open' && (
-                                <TableHead className="text-foreground font-semibold">
-                                    Actions
-                                </TableHead>
-                            )}
+                            <TableHead>T/P</TableHead>
+                            <TableHead>S/L</TableHead>
+                            <TableHead>Position</TableHead>
+                            <TableHead>Open Time</TableHead>
+                            {activeTab === 'closed' && <TableHead>Close Time</TableHead>}
+                            <TableHead>Swap, USD</TableHead>
+                            <TableHead>P/L, USD</TableHead>
+                            {activeTab === 'open' && <TableHead>Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -77,9 +53,9 @@ export default function Position({
                                 key={'dealId' in pos ? pos.dealId : pos.position}
                                 className="border-border hover:bg-muted/30"
                             >
-                                <TableCell className="text-foreground font-semibold py-2">
+                                <TableCell className="text-foreground py-[3px] font-semibold">
                                     <div className="flex items-center gap-2">
-                                        <Instrument symbol={pos.symbol} iconSize={24}/>
+                                        <Instrument symbol={pos.symbol} iconSize={24} />
                                     </div>
                                 </TableCell>
                                 <TableCell>
@@ -106,10 +82,10 @@ export default function Position({
                                         {pos.currentPrice.toLocaleString()}
                                     </TableCell>
                                 )}
-                                <TableCell className="text-center text-foreground">
+                                <TableCell className="text-foreground text-center">
                                     {pos.tp > 0 ? pos.tp?.toFixed(2) : '-'}
                                 </TableCell>
-                                <TableCell className="text-center text-foreground">
+                                <TableCell className="text-foreground text-center">
                                     {pos.sl > 0 ? pos.sl?.toFixed(2) : '-'}
                                 </TableCell>
                                 <TableCell className="text-foreground w-42 truncate font-mono text-sm">
