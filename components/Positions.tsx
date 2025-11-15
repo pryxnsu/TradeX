@@ -12,6 +12,7 @@ import {
 } from '@/app/(dashboard)/webtrading/page';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import { RefObject, useState } from 'react';
+import OpenPositions from './OpenPositions';
 import ClosedPositions from './ClosedPositions';
 
 export default function Positions({
@@ -22,18 +23,28 @@ export default function Positions({
     positionPanelRef: RefObject<ImperativePanelHandle | null>;
 }) {
     const [activePositionTab, setActivePositionTab] = useState('open');
+
+    function openPanel() {
+        positionPanelRef?.current?.resize(OPENED_SIZE_OF_POSITION_PANEL);
+    }
     return (
         <Tabs
             value={activePositionTab}
             onValueChange={setActivePositionTab}
             defaultValue="open"
-            className="mt-1 flex h-full flex-col px-2"
+            className="mt-1 flex h-full flex-col gap-0 px-2"
         >
-            <TabsList className="flex h-fit w-full shrink-0 items-center justify-between gap-4 rounded-none bg-transparent">
+            <TabsList className="flex h-fit w-full shrink-0 items-center justify-between gap-4 rounded-none border-b bg-transparent pb-2">
                 <div className="space-x-5">
-                    <TabsTrigger value="open">Open</TabsTrigger>
-                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="closed">Closed</TabsTrigger>
+                    <TabsTrigger value="open" onClick={openPanel}>
+                        Open
+                    </TabsTrigger>
+                    <TabsTrigger value="pending" onClick={openPanel}>
+                        Pending
+                    </TabsTrigger>
+                    <TabsTrigger value="closed" onClick={openPanel}>
+                        Closed
+                    </TabsTrigger>
                 </div>
 
                 {/* open / close position panel  */}
@@ -51,16 +62,14 @@ export default function Positions({
                     <Button
                         variant={'ghost'}
                         className={'cursor-pointer hover:border-none hover:bg-transparent'}
-                        onClick={() => {
-                            positionPanelRef.current?.resize(OPENED_SIZE_OF_POSITION_PANEL);
-                        }}
+                        onClick={openPanel}
                     >
                         <ChevronUp size={18} className="cursor-pointer" />
                     </Button>
                 )}
             </TabsList>
-            <TabsContent value="open" className="flex-1 overflow-auto">
-                Open Positions (Coming soon)
+            <TabsContent value="open" className="h-full flex-1 overflow-auto">
+                <OpenPositions activeTab={activePositionTab} />
             </TabsContent>
             <TabsContent value="pending" className="flex-1 overflow-auto">
                 Pending Positions (Coming soon)

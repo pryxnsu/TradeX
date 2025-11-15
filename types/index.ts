@@ -67,6 +67,11 @@ interface PositionProp {
     pnl: number;
 }
 
+// open position
+export interface OpenPositionProp extends PositionProp {
+    currentPrice: number;
+}
+
 // close position
 export interface ClosedPositonProp extends PositionProp {
     dealId: string;
