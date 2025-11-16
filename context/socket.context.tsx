@@ -28,9 +28,7 @@ interface SocketProviderProp {
 export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
-    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<
-        IncomingInsSocketMsgProp[] | null
-    >(null);
+    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<IncomingInsSocketMsgProp[] | null>(null);
     const priceCacheRef = useRef(new Map<string, IncomingInsSocketMsgProp>());
 
     // send message to ws server
@@ -47,16 +45,14 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     }, []);
 
     // send subscribe or unsubscribe instruments and chart event message to ws server
-    const subOrUnsubInstruments = useCallback(
+    const subscribeUnsubscribe = useCallback(
         (action: 'subscribe' | 'unsubscribe', event: string, symbols: string[]) => {
             let message: SocketMessageType;
             if (action === 'subscribe') {
-                // subscribe multiple instruments -> favorite instruments
                 message = {
                     subscribe: { event, symbols },
                 };
             } else {
-                // unsubscribe multiple instruments -> favorite instruments
                 message = {
                     unsubscribe: { event, symbols },
                 };
@@ -90,8 +86,14 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
 
                     if (favInstrumentsOfUser) {
                         // send event of subscribe favorite symbols
-                        subOrUnsubInstruments('subscribe', 'instruments', favInstrumentsOfUser);
+                        subscribeUnsubscribe('subscribe', 'instruments', favInstrumentsOfUser);
                     }
+
+                    // subscribes orders, positions, deals, accounts
+                    subscribeUnsubscribe('subscribe', 'orders', ['all']);
+                    subscribeUnsubscribe('subscribe', 'positions', ['all']);
+                    subscribeUnsubscribe('subscribe', 'deals', ['all']);
+                    subscribeUnsubscribe('subscribe', 'account', ['all']);
                 };
 
                 socket.onclose = () => {
@@ -121,9 +123,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                             // Favorite instrument data
                             if (parsedData['bid']) {
                                 const priceData = parsedData as IncomingInsSocketMsgProp;
-                                priceCacheRef.current.set('instruments', priceData);
-                                break;
-                            } else {
+                                priceCacheRef.current.set(priceData.symbol, priceData);
                                 break;
                             }
                         }
@@ -137,10 +137,17 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
 
         return () => {
             if (socketRef.current) {
+                if (favInstrumentsOfUser) {
+                    subscribeUnsubscribe('subscribe', 'instruments', favInstrumentsOfUser);
+                }
+                subscribeUnsubscribe('unsubscribe', 'orders', ['all']);
+                subscribeUnsubscribe('unsubscribe', 'positions', ['all']);
+                subscribeUnsubscribe('unsubscribe', 'deals', ['all']);
+                subscribeUnsubscribe('unsubscribe', 'accounts', ['all']);
                 socketRef.current.close();
             }
         };
-    }, [subOrUnsubInstruments]);
+    }, [subscribeUnsubscribe]);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
