@@ -82,3 +82,10 @@ export interface ClosedPositonProp extends PositionProp {
     fee: number;
     reason: number;
 }
+
+export type InstrumentConfig = {
+    contractSize: number;
+    digits: number;
+    marginFactor: number;
+    symbolType: 'forex' | 'crypto' | 'metal';
+};
