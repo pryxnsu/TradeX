@@ -89,3 +89,79 @@ export type InstrumentConfig = {
     marginFactor: number;
     symbolType: 'forex' | 'crypto' | 'metal';
 };
+
+// incoming socket messages of orders, positions, deals, accounts
+export type IncomingSocketEventType = {
+    e: 'positions' | 'orders' | 'accounts' | 'deals';
+    t: 'new' | 'del' | 'open' | 'in' | 'upd';
+    d:
+        | IncomingSocketOrderType
+        | IncomingSocketPositionsType
+        | IncomingSocketDealsType
+        | IncomingSocketAccountType;
+};
+
+export type IncomingSocketOrderType = {
+    orderId: string;
+    type: number;
+    price: number;
+    volume: number;
+    instrument: string;
+    sl: number;
+    tp: number;
+    openTime: number;
+    marginRate: number;
+    positionId: number | string;
+};
+
+export type IncomingSocketPositionsType = {
+    dealId: string;
+    positionId: string;
+    type: number;
+    price: number;
+    openPrice: number;
+    volume: number;
+    instrument: string;
+    sl: number;
+    tp: number;
+    commission: number;
+    fee: number;
+    swap: number;
+    openTime: number;
+    closeTime: number | null;
+    profit: number | null;
+    marginRate: number;
+    reason: number;
+};
+
+export type IncomingSocketDealsType = {
+    dealId: string;
+    time: number;
+    orderId: string;
+    positionId: string;
+    type: number;
+    direction: number;
+    price: number;
+    volume: number;
+    volumeClosed: number;
+    instrument: string;
+    profit: number;
+    sl: number;
+    tp: number;
+    commission: number;
+    fee: number;
+    swap: number;
+    reason: number;
+};
+
+export type IncomingSocketAccountType = {
+    balance: {
+        balance: number;
+        credit: number;
+    };
+    settings: {
+        currency: string;
+        leverage: number;
+        positionMode: number;
+    };
+};

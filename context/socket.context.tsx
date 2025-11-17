@@ -2,8 +2,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SocketContext } from '@/hooks/useSocket';
-import { SocketMessageType, User } from '@/types';
+import { IncomingSocketEventType, SocketMessageType, User } from '@/types';
 import { getLocalStorage } from '@/lib/localStorage';
+import { toast } from 'sonner';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
@@ -18,6 +19,7 @@ export interface SocketContextType {
     socketRef: React.RefObject<WebSocket | null>;
     isConnected: boolean;
     incomingInsSocketMsg: IncomingInsSocketMsgProp[] | null;
+    incomingPositionsSocketMsg: IncomingSocketEventType[];
     send: (data: SocketMessageType) => void;
 }
 
@@ -29,6 +31,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<IncomingInsSocketMsgProp[] | null>(null);
+    const [incomingPositionsSocketMsg, setIncomingPositionsSocketMsg] = useState<IncomingSocketEventType[]>([]);
     const priceCacheRef = useRef(new Map<string, IncomingInsSocketMsgProp>());
 
     // send message to ws server
@@ -108,6 +111,47 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
 
                 socket.onmessage = async ({ data }) => {
                     const parsedData = JSON.parse(data);
+
+                    switch (parsedData.e) {
+                        case 'orders': {
+                            if (parsedData.t === 'new') {
+                                if (parsedData.d) {
+                                    console.log('Order has been executed', parsedData.d.orderId);
+                                };
+                            } else if (parsedData.t === 'del') {
+                                if (parsedData.d) {
+                                    console.log('Order has been deleted', parsedData.d.orderId);
+                                };
+                            }
+                        }
+
+                        case 'positions': {
+                            if (parsedData.t === 'open') {
+                                if (!parsedData.d) break;
+                                
+                                console.log('Position has been opened', parsedData.d.positionId);
+
+                                setIncomingPositionsSocketMsg(prev => [...prev, parsedData]);                                
+
+                                toast.success('Position opened.', {
+                                    description: `Buy ${parsedData.d.volume} lots ${parsedData.d.instrument} at ${parsedData.d.openPrice}`,
+                                });
+                            }
+                        }
+
+                        case 'deals': {
+                            if (parsedData.t === 'in') {
+                                console.log('Deals has been done!');
+                            }
+                        }
+
+                        case 'account': {
+                            if (parsedData.t === 'upd') {
+                                if (!parsedData.d) break;
+                            }
+                        }
+                    }
+
                     switch (parsedData.event) {
                         case 'subscribe': {
                             console.log(`Socket: Subcribed to: ${favInstrumentsOfUser}`);
@@ -165,6 +209,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
         socketRef,
         isConnected,
         incomingInsSocketMsg,
+        incomingPositionsSocketMsg,
         send,
     };
     return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
