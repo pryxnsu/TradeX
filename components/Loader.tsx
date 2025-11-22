@@ -24,8 +24,7 @@ export default function Loader({ children }: { children: React.ReactNode }) {
             </div>
         );
     }
-
-    if (!userLoading || !isAuthenticated) {
+    if (!userLoading && !isAuthenticated) {
         return null;
     }
 
