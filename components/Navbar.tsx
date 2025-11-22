@@ -50,7 +50,7 @@ export default function Navbar() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-semibold">
-                                        {wallet?.equity.toLocaleString() || 0.0}{' '}
+                                        {wallet?.equity.toFixed(2) || 0.0}{' '}
                                         {wallet?.currency || 'USD'}
                                     </span>
                                     <ChevronDown />
@@ -61,10 +61,22 @@ export default function Navbar() {
                     <PopoverContent className="w-80 px-4 py-3">
                         <div className="mx-auto w-full max-w-md">
                             <div className="space-y-2">
-                                <BalanceRow name="Balance" value={wallet?.balance || 0.0} />
-                                <BalanceRow name="Equity" value={wallet?.equity || 0.0} />
-                                <BalanceRow name="Margin" value={wallet?.margin || 0.0} />
-                                <BalanceRow name="Free Margin" value={wallet?.freeMargin || 0.0} />
+                                <BalanceRow
+                                    name="Balance"
+                                    value={wallet?.balance.toFixed(2) || 0.0}
+                                />
+                                <BalanceRow
+                                    name="Equity"
+                                    value={wallet?.equity.toFixed(2) || 0.0}
+                                />
+                                <BalanceRow
+                                    name="Margin"
+                                    value={wallet?.margin.toFixed(2) || 0.0}
+                                />
+                                <BalanceRow
+                                    name="Free Margin"
+                                    value={wallet?.freeMargin.toFixed(2) || 0.0}
+                                />
                                 <BalanceRow
                                     name="Account Leverage"
                                     value={`1:${wallet?.leverage || 0}`}

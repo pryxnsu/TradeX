@@ -26,25 +26,25 @@ export default function WalletBalance() {
             <div className="flex items-center gap-2">
                 <span className="text-xs text-neutral-600">Equity:</span>
                 <span className="text-xs font-medium text-neutral-900">
-                    {wallet?.equity} {wallet?.currency}
+                    {wallet?.equity.toFixed(2)} {wallet?.currency}
                 </span>
             </div>
             <div className="flex items-center gap-2">
                 <span className="text-xs text-neutral-600">Free margin:</span>
                 <span className="text-xs font-medium text-neutral-900">
-                    {wallet?.freeMargin} {wallet?.currency}
+                    {wallet?.freeMargin.toFixed(2)} {wallet?.currency}
                 </span>
             </div>
             <div className="flex items-center gap-2">
                 <span className="text-xs text-neutral-600">Balance:</span>
                 <span className="text-xs font-medium text-neutral-900">
-                    {wallet?.balance} {wallet?.currency}
+                    {wallet?.balance.toFixed(2)} {wallet?.currency}
                 </span>
             </div>
             <div className="flex items-center gap-2">
                 <span className="text-xs text-neutral-600">Margin:</span>
                 <span className="text-xs font-medium text-neutral-900">
-                    {wallet?.margin} {wallet?.currency}
+                    {wallet?.margin.toFixed(2)} {wallet?.currency}
                 </span>
             </div>
         </footer>
