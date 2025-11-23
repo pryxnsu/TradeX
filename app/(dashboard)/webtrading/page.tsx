@@ -104,10 +104,12 @@ export default function Page() {
                         <ResizablePanelGroup direction="vertical" className="flex-1">
                             {/* Chart  */}
                             <ResizablePanel defaultSize={93} className="flex">
-                                <Chart />
+                                <div className="min-w-0 flex-1">
+                                    <Chart />
+                                </div>
                                 {/* Place bid  */}
                                 {placeBidPanel && (
-                                    <div className="ml-1 w-[40%] rounded-l-sm bg-white">
+                                    <div className="ml-1 w-[280px] max-w-[280px] min-w-[280px] rounded-l-sm bg-white">
                                         <BidPanel onClose={() => setPlaceBidPanel(false)} />
                                     </div>
                                 )}
