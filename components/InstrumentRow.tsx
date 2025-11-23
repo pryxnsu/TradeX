@@ -16,8 +16,10 @@ export function InstrumentRow({
     flashBidColor: string | null;
     flashAskColor: string | null;
 }) {
-    const isPositive = String(instrument?.change).startsWith('-') === false && String(instrument.change) !== '-';
-    const isNegative = String(instrument?.change).startsWith('-') && String(instrument.change) !== '-';
+    const isPositive =
+        String(instrument?.change).startsWith('-') === false && String(instrument.change) !== '-';
+    const isNegative =
+        String(instrument?.change).startsWith('-') && String(instrument.change) !== '-';
 
     // change selected symbol
     const { handleChangeSymbol } = useInstrument();
@@ -54,17 +56,17 @@ export function InstrumentRow({
 
             <TableCell>
                 <div
-                    className={`rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashBidColor}`}
+                    className={`mx-2 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashBidColor}`}
                 >
-                    {instrument.bid}
+                    {instrument.bid.toLocaleString()}
                 </div>
             </TableCell>
 
             <TableCell>
                 <div
-                    className={`rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashAskColor}`}
+                    className={`mx-2 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashAskColor}`}
                 >
-                    {instrument.ask}
+                    {instrument.ask.toLocaleString()}
                 </div>
             </TableCell>
 
@@ -107,7 +109,7 @@ export function InstrumentRow({
                     variant="ghost"
                     size="icon"
                     // TODO: add request to remove from favorite
-                    className="text-yellow-500 hover:text-yellow-600 hover:bg-transparent cursor-pointer"
+                    className="cursor-pointer text-yellow-500 hover:bg-transparent hover:text-yellow-600"
                 >
                     <Star className="h-5 w-5" fill="currentColor" stroke="currentColor" />
                 </Button>
