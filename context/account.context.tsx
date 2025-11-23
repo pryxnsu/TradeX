@@ -1,9 +1,14 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AccountContext } from '@/hooks/useAccount';
 import { setLocalStorage } from '@/lib/localStorage';
-import { OpenPositionProp, Wallet } from '@/types';
-import { useEffect, useState } from 'react';
+import {
+    IncomingSocketEventType,
+    IncomingSocketPositionsType,
+    OpenPositionProp,
+    Wallet,
+} from '@/types';
 
 export interface AccountContextType {
     wallet: Wallet | null;
@@ -14,6 +19,13 @@ export interface AccountContextType {
     setOpenPositions: React.Dispatch<React.SetStateAction<OpenPositionProp[]>>;
     openPositionLoading: boolean;
     openPositionError: string | null;
+    handleClosePosition: (
+        positionId: string,
+        price: number,
+        volume: number,
+        closeById: number
+    ) => void;
+    handlePositionEvent: (msg: IncomingSocketEventType) => void;
 }
 
 interface AccountProviderProp {
@@ -132,7 +144,128 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
         isLoading: openPositionLoading,
         error: openPositionError,
     } = useFetchOpenPositions();
-    
+
+    const addPosition = (p: IncomingSocketPositionsType) => {
+        setOpenPositions(prev => {
+            try {
+                if (
+                    !p.positionId ||
+                    !p.instrument ||
+                    p.openPrice === undefined ||
+                    p.volume === undefined
+                ) {
+                    console.warn('Invalid position data:', p);
+                    return prev;
+                }
+
+                const positionExists = prev.some(pe => pe.position === p.positionId);
+                if (positionExists) {
+                    return prev;
+                }
+
+                const upPosition: OpenPositionProp = {
+                    symbol: p.instrument,
+                    type: p.type,
+                    volume: p.volume,
+                    openPrice: p.openPrice,
+                    tp: p.tp,
+                    sl: p.sl,
+                    position: p.positionId,
+                    currentPrice: p.price,
+                    openTime: new Date(p.openTime),
+                    swap: p.swap || 0,
+                    pnl: p.profit || 0,
+                };
+
+                return [upPosition, ...prev];
+            } catch (err: unknown) {
+                console.error('Error processing new positions:', err);
+                return prev;
+            }
+        });
+    };
+
+    const updateOpenPosition = (p: IncomingSocketPositionsType) => {
+        setOpenPositions(prev => {
+            try {
+                if (!p.positionId) return prev;
+
+                return prev.flatMap(pos => {
+                    if (pos.position !== p.positionId) return pos;
+
+                    if (p.volume <= 0) {
+                        return [];
+                    }
+
+                    return {
+                        ...pos,
+                        volume: p.volume,
+                        pnl: p.profit ?? pos.pnl,
+                        currentPrice: p.price ?? pos.currentPrice,
+                        sl: p.sl ?? pos.sl,
+                        tp: p.tp ?? pos.tp,
+                    };
+                });
+            } catch (err: unknown) {
+                console.error('[Error] failed to update position', err);
+                return prev;
+            }
+        });
+    };
+
+    const closeFullPosition = (p: IncomingSocketPositionsType) => {
+        setOpenPositions(prev => {
+            return prev.filter(item => item.position !== p.positionId);
+        });
+    };
+
+    const handlePositionEvent = (msg: IncomingSocketEventType) => {
+        switch (msg.t) {
+            case 'open':
+                addPosition(msg.d as IncomingSocketPositionsType);
+                break;
+            case 'upd':
+                updateOpenPosition(msg.d as IncomingSocketPositionsType);
+                break;
+            case 'close': {
+                closeFullPosition(msg.d as IncomingSocketPositionsType);
+            }
+            default:
+                break;
+        }
+    };
+
+    const handleClosePosition = async (
+        positionId: string,
+        price: number,
+        volume: number,
+        closeById: number
+    ) => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${wallet?.id}/position/${positionId}/close`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        price,
+                        volume,
+                        closeById,
+                    }),
+                    credentials: 'include',
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to close position: ${response.statusText}`);
+            }
+        } catch (err: unknown) {
+            console.error('Error occured while closing position', err);
+        }
+    };
+
     const value = {
         wallet,
         setWallet,
@@ -142,6 +275,8 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
         walletError,
         openPositionLoading,
         openPositionError,
+        handleClosePosition,
+        handlePositionEvent,
     };
     return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 };

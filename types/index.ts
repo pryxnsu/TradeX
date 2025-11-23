@@ -93,7 +93,7 @@ export type InstrumentConfig = {
 // incoming socket messages of orders, positions, deals, accounts
 export type IncomingSocketEventType = {
     e: 'positions' | 'orders' | 'accounts' | 'deals';
-    t: 'new' | 'del' | 'open' | 'in' | 'upd';
+    t: 'new' | 'del' | 'open' | 'in' | 'upd' | 'close' | 'part_close';
     d:
         | IncomingSocketOrderType
         | IncomingSocketPositionsType

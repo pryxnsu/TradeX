@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
     Table,
     TableBody,
@@ -14,14 +15,29 @@ import { ClosedPositonProp, OpenPositionProp } from '@/types';
 import { getDate } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import Instrument from './Instrument';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from './ui/label';
 
 export default function Position({
     activeTab,
     p,
+    onClose,
 }: {
     activeTab: string;
     p: OpenPositionProp[] | ClosedPositonProp[];
+    onClose?: (positionId: string, price: number, volume: number, closeById: number) => void;
 }) {
+    const [partialCloseVolume, setPartialCloseVolume] = useState<number>(0.1);
     return (
         <div className="bg-card flex h-full flex-col overflow-hidden rounded-md pb-2">
             <div className="flex-1 overflow-auto">
@@ -111,14 +127,124 @@ export default function Position({
                                 {activeTab === 'open' && (
                                     <TableCell>
                                         <div className="flex gap-2">
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
+                                                </DialogTrigger>
+
+                                                <DialogContent className="w-1/3 rounded-xl px-5 py-3">
+                                                    <DialogHeader className="space-y-1">
+                                                        <DialogTitle className="flex items-center justify-between text-lg font-semibold">
+                                                            <Instrument
+                                                                symbol={pos.symbol}
+                                                                iconSize={30}
+                                                            />
+                                                            <span
+                                                                className={cn(
+                                                                    'mr-6 text-right text-sm',
+                                                                    pos.pnl >= 0
+                                                                        ? 'text-green-600'
+                                                                        : 'text-red-600'
+                                                                )}
+                                                            >
+                                                                {pos.pnl > 0 && '+'}
+                                                                {pos?.pnl.toFixed(2)}
+                                                            </span>
+                                                        </DialogTitle>
+
+                                                        <DialogDescription className="text-base">
+                                                            {pos.volume} lots
+                                                        </DialogDescription>
+
+                                                        <DialogDescription className="flex justify-between">
+                                                            <span>Buy at {pos.openPrice}</span>
+                                                            {'currentPrice' in pos && (
+                                                                <span>{pos?.currentPrice}</span>
+                                                            )}
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+
+                                                    <div className="mt-4 space-y-4">
+                                                        <div className="grid gap-2">
+                                                            <Label>Volume to close</Label>
+                                                            <Input
+                                                                onChange={e =>
+                                                                    setPartialCloseVolume(
+                                                                        Number(e.target.value)
+                                                                    )
+                                                                }
+                                                                id="close-volume"
+                                                                placeholder="0.1"
+                                                                defaultValue="0.1"
+                                                                type="number"
+                                                                step="0.01"
+                                                            />
+
+                                                            {partialCloseVolume > pos.volume && (
+                                                                <p>
+                                                                    Error: Close volume cant be more
+                                                                    than existing volume
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <DialogFooter>
+                                                        <DialogClose asChild>
+                                                            <Button
+                                                                disabled={
+                                                                    partialCloseVolume > pos.volume
+                                                                }
+                                                                variant={'destructive'}
+                                                                className="w-full"
+                                                                onClick={() => {
+                                                                    if ('currentPrice' in pos) {
+                                                                        onClose?.(
+                                                                            pos.position,
+                                                                            pos.currentPrice,
+                                                                            partialCloseVolume,
+                                                                            0.1
+                                                                        );
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Partial Close
+                                                            </Button>
+                                                        </DialogClose>
+                                                    </DialogFooter>
+                                                    <p className="text-center text-sm">
+                                                        Estimate profit:{' '}
+                                                        <span
+                                                            className={cn(
+                                                                pos.pnl > 0
+                                                                    ? 'text-green-500'
+                                                                    : 'text-red-500'
+                                                            )}
+                                                        >
+                                                            {pos.pnl > 0 && '+'}
+                                                            {pos?.pnl.toFixed(2)}
+                                                        </span>
+                                                    </p>
+                                                </DialogContent>
+                                            </Dialog>
+
                                             <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-8 w-8 p-0"
-                                            >
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
-                                            <Button
+                                                onClick={() => {
+                                                    if ('currentPrice' in pos) {
+                                                        onClose?.(
+                                                            pos.position,
+                                                            pos.currentPrice,
+                                                            pos.volume,
+                                                            0
+                                                        );
+                                                    }
+                                                }}
                                                 size="sm"
                                                 variant="ghost"
                                                 className="h-8 w-8 p-0"

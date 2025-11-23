@@ -8,11 +8,18 @@ import { Spinner } from './ui/spinner';
 import Position from './Position';
 import { IncomingInsSocketMsgProp } from '@/context/socket.context';
 import { BriefcaseBusiness } from 'lucide-react';
-import { IncomingSocketPositionsType, OpenPositionProp } from '@/types';
 
 export default function OpenPositions({ activeTab }: { activeTab: string }) {
     const { incomingInsSocketMsg, incomingPositionsSocketMsg } = useSocket();
-    const { setWallet, openPositions, setOpenPositions, openPositionLoading, openPositionError } = useAccount();
+    const {
+        setWallet,
+        openPositions,
+        setOpenPositions,
+        openPositionLoading,
+        openPositionError,
+        handleClosePosition,
+        handlePositionEvent,
+    } = useAccount();
 
     // update current price & pnl of open positions
     useEffect(() => {
@@ -92,58 +99,10 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
         )
             return;
 
-        setOpenPositions(prev => {
-            try {
-                const newPositions = incomingPositionsSocketMsg.filter(
-                    item => item.e === 'positions' && item.t === 'open' && item.d
-                );
-
-                if (newPositions.length === 0) return prev;
-
-                const positionsToAdd: OpenPositionProp[] = [];
-
-                for (const newPosition of newPositions) {
-                    const positionData = newPosition.d as IncomingSocketPositionsType;
-
-                    if (
-                        !positionData.positionId ||
-                        !positionData.instrument ||
-                        positionData.openPrice === undefined ||
-                        positionData.volume === undefined
-                    ) {
-                        console.warn('Invalid position data:', positionData);
-                        continue;
-                    }
-
-                    const positionExists = prev.some(p => p.position === positionData.positionId);
-                    if (positionExists) {
-                        continue;
-                    }
-
-                    const upPosition: OpenPositionProp = {
-                        symbol: positionData.instrument,
-                        type: positionData.type,
-                        volume: positionData.volume,
-                        openPrice: positionData.openPrice,
-                        tp: positionData.tp,
-                        sl: positionData.sl,
-                        position: positionData.positionId,
-                        currentPrice: positionData.price,
-                        openTime: new Date(positionData.openTime),
-                        swap: positionData.swap || 0,
-                        pnl: positionData.profit || 0,
-                    };
-
-                    positionsToAdd.push(upPosition);
-                }
-
-                return positionsToAdd.length > 0 ? [...positionsToAdd, ...prev] : prev;
-            } catch (err: unknown) {
-                console.error('Error processing new positions:', err);
-                return prev;
-            }
-        });
-    }, [incomingPositionsSocketMsg, setOpenPositions]);
+        for (const incPositionMsg of incomingPositionsSocketMsg) {
+            handlePositionEvent(incPositionMsg);
+        }
+    }, [incomingPositionsSocketMsg]);
 
     if (openPositions.length === 0) {
         return (
@@ -167,5 +126,5 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
             </div>
         );
     }
-    return <Position activeTab={activeTab} p={openPositions} />;
+    return <Position activeTab={activeTab} p={openPositions} onClose={handleClosePosition} />;
 }

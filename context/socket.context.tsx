@@ -30,8 +30,12 @@ interface SocketProviderProp {
 export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
-    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<IncomingInsSocketMsgProp[] | null>(null);
-    const [incomingPositionsSocketMsg, setIncomingPositionsSocketMsg] = useState<IncomingSocketEventType[]>([]);
+    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<
+        IncomingInsSocketMsgProp[] | null
+    >(null);
+    const [incomingPositionsSocketMsg, setIncomingPositionsSocketMsg] = useState<
+        IncomingSocketEventType[]
+    >([]);
     const priceCacheRef = useRef(new Map<string, IncomingInsSocketMsgProp>());
 
     // send message to ws server
@@ -117,26 +121,43 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                             if (parsedData.t === 'new') {
                                 if (parsedData.d) {
                                     console.log('Order has been executed', parsedData.d.orderId);
-                                };
+                                }
                             } else if (parsedData.t === 'del') {
                                 if (parsedData.d) {
                                     console.log('Order has been deleted', parsedData.d.orderId);
-                                };
+                                }
                             }
                         }
 
                         case 'positions': {
+                            const side = parsedData.d.type === 'buy' ? 'Buy' : 'Sell';
                             if (parsedData.t === 'open') {
                                 if (!parsedData.d) break;
-                                
+
                                 console.log('Position has been opened', parsedData.d.positionId);
 
-                                setIncomingPositionsSocketMsg(prev => [...prev, parsedData]);                                
-
                                 toast.success('Position opened.', {
-                                    description: `Buy ${parsedData.d.volume} lots ${parsedData.d.instrument} at ${parsedData.d.openPrice}`,
+                                    description: `${side} ${parsedData.d.volume} lots ${parsedData.d.instrument} at ${parsedData.d.openPrice}`,
+                                });
+                            } else if (parsedData.t === 'upd') {
+                                console.log('Position has been updated', parsedData.d.positionId);
+                            } else if (parsedData.t === 'part_close') {
+                                console.log(
+                                    'Position has been closed parted',
+                                    parsedData.d.positionId
+                                );
+
+                                toast.success('Position closed parted', {
+                                    description: `${side} ${parsedData.d.volume} lots ${parsedData.d.instrument} at ${parsedData.d.openPrice}`,
+                                });
+                            } else if (parsedData.t === 'close') {
+                                console.log('Position has been closed', parsedData.d.positionId);
+
+                                toast.success('Position closed.', {
+                                    description: `${side} ${parsedData.d.volume} lots ${parsedData.d.instrument} at ${parsedData.d.openPrice}`,
                                 });
                             }
+                            setIncomingPositionsSocketMsg(prev => [...prev, parsedData]);
                         }
 
                         case 'deals': {

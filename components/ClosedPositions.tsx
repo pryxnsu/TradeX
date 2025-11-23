@@ -1,10 +1,11 @@
 'use client';
 
-import { ClosedPositonProp } from '@/types';
+import { ClosedPositonProp, IncomingSocketPositionsType } from '@/types';
 import { useEffect, useState } from 'react';
 import Position from './Position';
 import { Spinner } from './ui/spinner';
 import { BriefcaseBusiness } from 'lucide-react';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function ClosedPositions({ activeTab }: { activeTab: string }) {
     const [closedPositions, setClosedPositions] = useState<ClosedPositonProp[]>([]);
@@ -49,6 +50,51 @@ export default function ClosedPositions({ activeTab }: { activeTab: string }) {
 
         fetchClosedPositions();
     }, []);
+
+    const { incomingPositionsSocketMsg } = useSocket();
+
+    // add closed position
+    useEffect(() => {
+        if (!incomingPositionsSocketMsg) return;
+
+        setClosedPositions(prev => {
+            if (prev.length === 0) return prev;
+
+            const closePosition = incomingPositionsSocketMsg
+                .filter(
+                    item =>
+                        item.e === 'positions' &&
+                        (item.t === 'close' || item.t === 'part_close') &&
+                        item.d
+                )
+                .map(item => {
+                    const positionData = item.d as IncomingSocketPositionsType;
+                    return {
+                        dealId: positionData.dealId,
+                        symbol: positionData.instrument,
+                        type: positionData.type,
+                        volume: positionData.volume,
+                        openPrice: positionData.openPrice,
+                        closePrice: positionData.price,
+                        tp: positionData.tp,
+                        sl: positionData.sl,
+                        position: positionData.positionId,
+                        openTime: new Date(positionData.openTime),
+                        closeTime: new Date(positionData.closeTime as number),
+                        swap: positionData.swap,
+                        pnl: positionData.profit || 0,
+                        marginRate: positionData.marginRate,
+                        commission: positionData.commission,
+                        fee: positionData.fee,
+                        reason: positionData.reason,
+                    } as ClosedPositonProp;
+                });
+
+            if (closePosition.length === 0) return prev;
+
+            return [...prev, ...closePosition];
+        });
+    }, [incomingPositionsSocketMsg]);
 
     if (closedPositions.length === 0) {
         return (
