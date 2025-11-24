@@ -11,7 +11,7 @@ import { Spinner } from './ui/spinner';
 import { useSocket } from '@/hooks/useSocket';
 import { setLocalStorage } from '@/lib/localStorage';
 
-export interface InstrumentProp {    
+export interface InstrumentProp {
     id: string;
     sortOrder: number;
     signal: string;
@@ -170,9 +170,11 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[200px]">Symbol</TableHead>
-                                <TableHead className="w-20 text-center">Signal</TableHead>
-                                <TableHead className="w-[120px]">Bid</TableHead>
-                                <TableHead className="w-[120px]">Ask</TableHead>
+                                <TableHead className="min-w-25 p-1 px-3 text-center">
+                                    Signal
+                                </TableHead>
+                                <TableHead className="min-w-25 p-1 px-3">Bid</TableHead>
+                                <TableHead className="min-w-25 p-1 px-3">Ask</TableHead>
                                 <TableHead className="w-[150px]">1D change</TableHead>
                                 <TableHead className="w-[120px]">P/L, USD</TableHead>
                                 <TableHead className="w-[60px]">

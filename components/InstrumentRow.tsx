@@ -6,6 +6,7 @@ import Instrument from './Instrument';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { InstrumentProp } from './Instruments';
 import { useInstrument } from '@/hooks/useInstrument';
+import { cn } from '@/lib/utils';
 
 export function InstrumentRow({
     instrument,
@@ -40,11 +41,12 @@ export function InstrumentRow({
 
             <TableCell className="text-center">
                 <div
-                    className={`inline-flex rounded p-1 ${
+                    className={cn(
+                        'inline-flex rounded-xs p-[2px]',
                         instrument?.signal === 'up'
                             ? 'bg-green-500 text-white'
                             : 'bg-red-500 text-white'
-                    }`}
+                    )}
                 >
                     {instrument?.signal === 'up' ? (
                         <ArrowUp className="h-4 w-4" />
@@ -56,7 +58,10 @@ export function InstrumentRow({
 
             <TableCell>
                 <div
-                    className={`mx-2 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashBidColor}`}
+                    className={cn(
+                        'mx-1 w-fit min-w-25 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200',
+                        flashBidColor
+                    )}
                 >
                     {instrument.bid.toLocaleString()}
                 </div>
@@ -64,7 +69,10 @@ export function InstrumentRow({
 
             <TableCell>
                 <div
-                    className={`mx-2 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200 ${flashAskColor}`}
+                    className={cn(
+                        'mx-1 w-fit min-w-25 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200',
+                        flashAskColor
+                    )}
                 >
                     {instrument.ask.toLocaleString()}
                 </div>
