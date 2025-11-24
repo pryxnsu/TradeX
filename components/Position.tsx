@@ -86,36 +86,36 @@ export default function Position({
                                 <TableCell className="text-foreground text-left">
                                     {pos.volume.toFixed(2)}
                                 </TableCell>
-                                <TableCell className="text-foreground text-left">
+                                <TableCell className="text-foreground text-left underline decoration-dashed">
                                     {pos.openPrice.toLocaleString()}
                                 </TableCell>
                                 {'closePrice' in pos ? (
-                                    <TableCell className="text-foreground text-left">
+                                    <TableCell className="text-foreground text-left underline decoration-dashed">
                                         {pos.closePrice?.toLocaleString()}
                                     </TableCell>
                                 ) : (
-                                    <TableCell className="text-foreground text-left">
+                                    <TableCell className="text-foreground text-left underline decoration-dashed">
                                         {pos.currentPrice.toLocaleString()}
                                     </TableCell>
                                 )}
-                                <TableCell className="text-foreground text-center">
+                                <TableCell className="text-foreground px-1 text-center underline decoration-dashed">
                                     {pos.tp > 0 ? pos.tp?.toFixed(2) : '-'}
                                 </TableCell>
-                                <TableCell className="text-foreground text-center">
+                                <TableCell className="text-foreground px-1 text-center underline decoration-dashed">
                                     {pos.sl > 0 ? pos.sl?.toFixed(2) : '-'}
                                 </TableCell>
-                                <TableCell className="text-foreground w-42 truncate font-mono text-sm">
+                                <TableCell className="text-foreground w-42 truncate px-1 font-mono text-sm">
                                     <div className="max-w-42 truncate">{pos.position}</div>
                                 </TableCell>
                                 <TableCell className="text-foreground text-sm">
                                     {getDate(pos.openTime)}
                                 </TableCell>
                                 {'closeTime' in pos && pos.closeTime && (
-                                    <TableCell className="text-foreground text-sm">
+                                    <TableCell className="text-foreground px-1 text-sm">
                                         {getDate(pos.closeTime)}
                                     </TableCell>
                                 )}
-                                <TableCell className="text-foreground text-right">
+                                <TableCell className="text-foreground px-1 text-right">
                                     {pos.swap && pos?.swap > 0 ? pos.swap : '-'}
                                 </TableCell>
                                 <TableCell
