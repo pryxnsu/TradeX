@@ -30,7 +30,7 @@ export function InstrumentRow({
     return (
         <TableRow className="select-none">
             <TableCell
-                onClick={() => handleChangeSymbol(instrument.symbol, 'forex')}
+                onClick={() => handleChangeSymbol(instrument.symbol)}
                 className="flex items-center gap-2"
             >
                 <span className="cursor-pointer">

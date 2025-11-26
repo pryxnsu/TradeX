@@ -16,7 +16,7 @@ export interface InstrumentContextType {
     setCandles: (candle: Candle[]) => void;
     isLoading: boolean;
     error: string;
-    handleChangeSymbol: (symbol: string, type: string) => void;
+    handleChangeSymbol: (symbol: string) => void;
     timeFrame: number;
     setTimeFrame: (tf: number) => void;
 }
@@ -47,7 +47,6 @@ function calculateFrom(interval: number, count: number) {
 
 export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children }) => {
     const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USD');
-    const [type, setType] = useState<string>('stock');
     const [candles, setCandles] = useState<Candle[]>([]);
     const [timeFrame, setTimeFrame] = useState(5); // 5min // measuring in unit minutes
     const [from] = useState<number>(() => calculateFrom(5 * 60_000, 200));
@@ -63,7 +62,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
             const sym = normalizeSymbol(selectedSymbol);
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/${sym}/${type}/candles?time_frame=${timeFrame}&from=${from}&count=${count}`,
+                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/${sym}/candles?time_frame=${timeFrame}&from=${from}&count=${count}`,
                     {
                         method: 'GET',
                         headers: {
@@ -73,9 +72,12 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
                     }
                 );
 
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Chart');
+                }
+
                 const data = await response.json();
-                const sorted = data.priceHistory.sort((a: Candle, b: Candle) => a.time - b.time);
-                setCandles(sorted);
+                setCandles(data.priceHistory);
             } catch (err: unknown) {
                 console.error(`Error in fetching symbol ${selectedSymbol} candle`, err);
                 const errMsg =
@@ -88,19 +90,16 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
             }
         };
         fetchCandles();
-    }, [count, from, selectedSymbol, timeFrame, type]);
+    }, [count, from, selectedSymbol, timeFrame]);
 
-    // update the symbol and fetch new data according to symbol
-    const handleChangeSymbol = (symbol: string, type: string) => {
+    const handleChangeSymbol = (symbol: string) => {
         setSelectedSymbol(symbol);
         setLocalStorage('selected-symbol', symbol);
-        setType(type);
     };
 
-    // saving selected array symbol in local storage
     useEffect(() => {
         setLocalStorage('selected-symbol', selectedSymbol);
-    }, [selectedSymbol]);    
+    }, [selectedSymbol]);
 
     const value = {
         selectedSymbol,
