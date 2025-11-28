@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { useSocket } from '@/hooks/useSocket';
 import { X, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,25 +10,20 @@ import Instrument from './Instrument';
 import { useAccount } from '@/hooks/useAccount';
 import { normalizeSymbol } from '@/lib/helper';
 import { toast } from 'sonner';
+import { useBid } from '@/hooks/useBid';
+import { Spinner } from './ui/spinner';
+import { PricesProp, Side } from '@/types';
 
-interface PricesProp {
-    buy: number;
-    sell: number;
-    time: number;
-}
-
-type Side = 'buy' | 'sell';
-
-function calculateTpandSl(side: Side, prices: PricesProp) {
+function calculateTpandSl(side: Side, selectedSymbolPrice: PricesProp) {
     if (side === 'buy') {
         return {
-            tp: prices.buy * 1.002,
-            sl: prices.buy * 0.998,
+            tp: selectedSymbolPrice.buy * 1.002,
+            sl: selectedSymbolPrice.buy * 0.998,
         };
     } else {
         return {
-            tp: prices.sell * 0.998,
-            sl: prices.sell * 1.002,
+            tp: selectedSymbolPrice.sell * 0.998,
+            sl: selectedSymbolPrice.sell * 1.002,
         };
     }
 }
@@ -54,31 +48,84 @@ function validateTpSl(side: Side, price: number, tp?: number, sl?: number): stri
     return null;
 }
 
-export default function BidPanel({ onClose }: { onClose: () => void }) {
-    const [prices, setPrices] = useState<PricesProp>();
-    const [side, setSide] = useState<Side>('buy');
-    const [orderType, setOrderType] = useState<'market' | 'pending'>('market');
-    const [volume, setVolume] = useState<number>(0.1);
-    const [takeProfit, setTakeProfit] = useState<number | undefined>(undefined);
-    const [stopLoss, setStopLoss] = useState<number | undefined>(undefined);
-    const [isOrderPlacing, setIsOrderPlacing] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
+const placeOrder = async (data: {
+    walletId: string | undefined;
+    instrument: string;
+    price: number;
+    sl: number | undefined;
+    tp: number | undefined;
+    type: number;
+    volume: number;
+}) => {
+    try {
+        const { walletId, instrument, price, sl, tp, type, volume } = data;
 
-    const { selectedSymbol } = useInstrument();
-    const { incomingInsSocketMsg } = useSocket();
-
-    useEffect(() => {
-        if (!incomingInsSocketMsg || !Array.isArray(incomingInsSocketMsg)) return;
-
-        const instrument = incomingInsSocketMsg.find(ins => ins.symbol === selectedSymbol);
-        if (instrument) {
-            setPrices({
-                buy: instrument.ask,
-                sell: instrument.bid,
-                time: instrument.time,
-            });
+        if (!walletId) {
+            throw new Error('Wallet not found. Please log in.');
         }
-    }, [incomingInsSocketMsg, selectedSymbol]);
+
+        if (!price || !instrument || !volume) {
+            throw new Error('Missing required order parameters');
+        }
+
+        if (isNaN(price) || price <= 0) {
+            throw new Error('Invalid price');
+        }
+
+        if (volume < 0.01) {
+            throw new Error('Minimum volume is 0.01 lots');
+        }
+
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${walletId}/orders`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    oneClick: false,
+                    instrument,
+                    price,
+                    sl: sl === undefined ? 0 : sl,
+                    tp: tp === undefined ? 0 : tp,
+                    type,
+                    volume,
+                }),
+                credentials: 'include',
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to place order: ${response.statusText}`);
+        }
+    } catch (err: unknown) {
+        throw err;
+    }
+};
+
+export default function BidPanel({ onClose }: { onClose: () => void }) {
+    const { selectedSymbol, selectedSymbolPrice } = useInstrument();
+    const { wallet } = useAccount();
+    const {
+        side,
+        setSide,
+        orderType,
+        setOrderType,
+        volume,
+        setVolume,
+        takeProfit,
+        setTakeProfit,
+        stopLoss,
+        setStopLoss,
+        isOrderPlacing,
+        setIsOrderPlacing,
+        error,
+        setError,
+        tpWarning,
+        slWarning,
+    } = useBid();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const target = e.target as HTMLInputElement;
@@ -104,8 +151,8 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
     };
 
     const adjustTakeProfit = (delta: number) => {
-        if (!prices) return;
-        const basePrice = side === 'buy' ? prices.buy : prices.sell;
+        if (!selectedSymbolPrice) return;
+        const basePrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
         const step = basePrice * 0.0001;
         const current = takeProfit || basePrice;
         const newValue = Number((current + delta * step).toFixed(5));
@@ -113,99 +160,18 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
     };
 
     const adjustStopLoss = (delta: number) => {
-        if (!prices) return;
-        const basePrice = side === 'buy' ? prices.buy : prices.sell;
+        if (!selectedSymbolPrice) return;
+        const basePrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
         const step = basePrice * 0.0001;
         const current = stopLoss || basePrice;
         const newValue = Number((current + delta * step).toFixed(5));
         setStopLoss(newValue);
     };
 
-    const { wallet } = useAccount();
+    const handlePlaceOrder = useCallback(async () => {
+        if (!selectedSymbolPrice || !side) return;
 
-    const placeOrder = useCallback(
-        async (data: {
-            instrument: string;
-            price: number;
-            sl: number | undefined;
-            tp: number | undefined;
-            type: number;
-            volume: number;
-        }) => {
-            setIsOrderPlacing(true);
-            setError(null);
-            try {
-                if (!wallet?.id) {
-                    throw new Error('Wallet not found. Please log in.');
-                }
-
-                const { instrument, price, sl, tp, type, volume } = data;
-
-                if (!price || !instrument || !volume) {
-                    throw new Error('Missing required order parameters');
-                }
-
-                if (isNaN(price) || price <= 0) {
-                    throw new Error('Invalid price');
-                }
-
-                if (volume < 0.01) {
-                    throw new Error('Minimum volume is 0.01 lots');
-                }
-
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${wallet.id}/orders`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            oneClick: false,
-                            instrument,
-                            price,
-                            sl: sl === undefined ? 0 : sl,
-                            tp: tp === undefined ? 0 : tp,
-                            type,
-                            volume,
-                        }),
-                        credentials: 'include',
-                    }
-                );
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(
-                        errorData.message || `Failed to place order: ${response.statusText}`
-                    );
-                }
-
-                toast.success('Order placed successfully', {
-                    description: `${side.toUpperCase()} ${volume} lots of ${selectedSymbol} at ${price.toFixed(5)}`,
-                });
-
-                onClose();
-            } catch (err: unknown) {
-                console.error('[Error] Failed to place order', err);
-
-                const errMsg =
-                    err instanceof Error ? err.message : 'Something went wrong while placing order';
-
-                setError(errMsg);
-                toast.error('Order Failed', {
-                    description: errMsg,
-                });
-            } finally {
-                setIsOrderPlacing(false);
-            }
-        },
-        [wallet?.id, side, selectedSymbol, onClose]
-    );
-
-    const handlePlaceOrder = useCallback(() => {
-        if (!prices || !side) return;
-
-        const currentPrice = side === 'buy' ? prices.buy : prices.sell;
+        const currentPrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
 
         const validationError = validateTpSl(side, currentPrice, takeProfit, stopLoss);
         if (validationError) {
@@ -214,16 +180,42 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
             return;
         }
 
-        placeOrder({
-            instrument: normalizeSymbol(selectedSymbol),
-            price: currentPrice,
-            sl: stopLoss,
-            tp: takeProfit,
-            type: side === 'buy' ? 0 : 1,
-            volume,
-        });
-    }, [prices, side, takeProfit, stopLoss, volume, selectedSymbol, placeOrder]);
+        try {
+            await placeOrder({
+                walletId: wallet?.id,
+                instrument: normalizeSymbol(selectedSymbol),
+                price: currentPrice,
+                sl: stopLoss,
+                tp: takeProfit,
+                type: side === 'buy' ? 0 : 1,
+                volume,
+            });
 
+            toast.success('Order placed successfully', {
+                description: `${side.toUpperCase()} ${volume} lots of ${selectedSymbol} at ${currentPrice.toFixed(2)}`,
+            });
+        } catch (err: unknown) {
+            console.error('[Error] Failed to place order', err);
+
+            const errMsg =
+                err instanceof Error ? err.message : 'Something went wrong while placing order';
+
+            setError(errMsg);
+            toast.error('Order Failed', {
+                description: errMsg,
+            });
+        } finally {
+            setIsOrderPlacing(false);
+        }
+    }, [selectedSymbolPrice, side, takeProfit, stopLoss, volume, selectedSymbol, placeOrder]);
+
+    if (!selectedSymbolPrice?.buy || !selectedSymbolPrice?.sell) {
+        return (
+            <div className="flex h-full items-center justify-center gap-3">
+                Connecting to server <Spinner className="size-6" />
+            </div>
+        );
+    }
     return (
         <div className="w-full">
             <div className="flex items-center justify-between border-b border-gray-200 p-4">
@@ -264,7 +256,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                                     side === 'sell' && 'text-white'
                                 )}
                             >
-                                {prices?.sell.toLocaleString()}
+                                {selectedSymbolPrice?.sell.toLocaleString()}
                             </div>
                         </Button>
                         <Button
@@ -290,7 +282,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                                     side === 'buy' && 'text-white'
                                 )}
                             >
-                                {prices?.buy.toLocaleString()}
+                                {selectedSymbolPrice?.buy.toLocaleString()}
                             </div>
                         </Button>
                     </div>
@@ -361,16 +353,16 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                     <div className="flex items-center gap-2 overflow-hidden rounded-sm border border-gray-200">
                         <Input
                             onSelect={() => {
-                                if (!side || !prices) return;
-                                const data = calculateTpandSl(side, prices);
-                                setTakeProfit(Number(data.tp.toFixed(4)));
+                                if (!side || !selectedSymbolPrice) return;
+                                const data = calculateTpandSl(side, selectedSymbolPrice);
+                                setTakeProfit(Number(data.tp.toFixed(2)));
                             }}
                             type="number"
                             name="takeProfit"
-                            value={takeProfit}
+                            value={takeProfit ?? ''}
                             onChange={handleInputChange}
                             placeholder="Not set"
-                            className="border-0 text-sm shadow-none ring-0 focus:border-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="[appearance:textfield] border-0 text-sm shadow-none ring-0 focus:border-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         />
                         <Button
                             type="button"
@@ -391,6 +383,11 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                             +
                         </Button>
                     </div>
+                    {tpWarning && (
+                        <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                            {tpWarning}
+                        </div>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -401,16 +398,16 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                     <div className="flex items-center gap-2 overflow-hidden rounded-sm border border-gray-200">
                         <Input
                             onSelect={() => {
-                                if (!side || !prices) return;
-                                const data = calculateTpandSl(side, prices);
-                                setStopLoss(Number(data.sl.toFixed(4)));
+                                if (!side || !selectedSymbolPrice) return;
+                                const data = calculateTpandSl(side, selectedSymbolPrice);
+                                setStopLoss(Number(data.sl.toFixed(2)));
                             }}
                             type="number"
                             name="stopLoss"
-                            value={stopLoss}
+                            value={stopLoss ?? ''}
                             onChange={handleInputChange}
                             placeholder="Not set"
-                            className="border-0 text-sm shadow-none ring-0 focus:border-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="[appearance:textfield] border-0 text-sm shadow-none ring-0 focus:border-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         />
                         <Button
                             type="button"
@@ -431,6 +428,11 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                             +
                         </Button>
                     </div>
+                    {slWarning && (
+                        <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                            {slWarning}
+                        </div>
+                    )}
                 </div>
 
                 {error && (
@@ -442,7 +444,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                 <div className="flex flex-col gap-2">
                     <Button
                         onClick={handlePlaceOrder}
-                        disabled={isOrderPlacing || !prices || !wallet?.id}
+                        disabled={isOrderPlacing || !selectedSymbolPrice || !wallet?.id}
                         variant={'outline'}
                         className={cn(
                             'h-11 rounded-sm',

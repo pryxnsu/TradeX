@@ -165,3 +165,11 @@ export type IncomingSocketAccountType = {
         positionMode: number;
     };
 };
+
+export interface PricesProp {
+    buy: number;
+    sell: number;
+    time: number;
+}
+
+export type Side = 'buy' | 'sell';
