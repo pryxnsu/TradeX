@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import type { LogicalRange, Time } from 'lightweight-charts';
 import {
     IChartApi,
     ISeriesApi,
@@ -9,10 +10,11 @@ import {
     ColorType,
 } from 'lightweight-charts';
 import { useInstrument } from '@/hooks/useInstrument';
-import type { Time } from 'lightweight-charts';
 import { Candle } from '@/types';
 import { useSocket } from '@/hooks/useSocket';
 import { IncomingInsSocketMsgProp } from '@/context/socket.context';
+import { Spinner } from './ui/spinner';
+import { fetchHistoryCandles } from '@/context/instrument.context';
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -25,7 +27,15 @@ const chartOptions: DeepPartial<ChartOptions> = {
     },
     timeScale: {
         borderVisible: true,
+        timeVisible: true,
+        secondsVisible: false,
+        shiftVisibleRangeOnNewBar: true,
     },
+};
+
+const getStartCandle = (timestamp: number, timeFrameMinutes: number) => {
+    const intervalMs = timeFrameMinutes * 60_000;
+    return Math.floor(timestamp / intervalMs) * intervalMs;
 };
 
 // this is for demo chart only, real chart is not implemented yet
@@ -36,11 +46,21 @@ export default function Chart() {
     const candlesRef = useRef<Candle[]>([]);
     const lastCandleRef = useRef<Candle | null>(null);
 
-    // candles
-    const { candles, selectedSymbol, timeFrame } = useInstrument();
+    const { candles, setCandles, selectedSymbol, timeFrame, error, isLoading } = useInstrument();
 
     useEffect(() => {
-        const chart = createChart(containerRef.current!, chartOptions);
+        if (!containerRef.current) {
+            console.log('Container ref not available');
+            return;
+        }
+
+        if (chartRef.current) {
+            console.log('Chart already initialized');
+            return;
+        }
+
+        console.log('Initializing chart...');
+        const chart = createChart(containerRef.current, chartOptions);
 
         const series = chart.addSeries(CandlestickSeries, {
             upColor: '#26a69a',
@@ -53,27 +73,14 @@ export default function Chart() {
         chartRef.current = chart;
         seriesRef.current = series;
 
-        chart.timeScale().subscribeVisibleLogicalRangeChange(logicalRange => {
-            if (!logicalRange || logicalRange.from == null) return;
+        return () => {
+            chart.remove();
+            chartRef.current = null;
+            seriesRef.current = null;
+        };
+    }, [isLoading]);
 
-            if (logicalRange.from < 10) {
-                setTimeout(() => {
-                    const formattedData = candles.map(candle => ({
-                        time: candle.time as Time,
-                        open: candle.open,
-                        high: candle.high,
-                        low: candle.low,
-                        close: candle.close,
-                    }));
-                    if (seriesRef.current) seriesRef.current.setData(formattedData);
-                }, 250);
-            }
-        });
-
-        return () => chart.remove();
-    }, [candles]);
-
-    // Handle resize events
+    /* --------------------------------- Handle resize events --------------------------------- */
     useEffect(() => {
         const container = containerRef.current;
         if (!container || !chartRef.current) return;
@@ -92,40 +99,108 @@ export default function Chart() {
         return () => resizeObserver.disconnect();
     }, []);
 
+    /* --------------------------------- Backward scrolling --------------------------------- */
+    useEffect(() => {
+        if (!chartRef.current || !seriesRef.current) {
+            return;
+        }
+
+        if (candles.length === 0) {
+            return;
+        }
+
+        const chart = chartRef.current;
+        const series = seriesRef.current;
+
+        let isLoadingMore = false;
+        const THRESHOLD = 50;
+
+        const handleVisibleRangeChange = async (newRange: LogicalRange | null) => {
+            if (!newRange) {
+                return;
+            }
+
+            if (isLoadingMore) {
+                return;
+            }
+
+            const barsInfo = series.barsInLogicalRange(newRange);
+
+            if (barsInfo !== null && barsInfo.barsBefore < THRESHOLD) {
+                isLoadingMore = true;
+
+                const historicalCount = -100;
+
+                const from = candles[0].time - timeFrame * 60 * 1000;
+
+                const candlesHistory = await fetchHistoryCandles(
+                    selectedSymbol,
+                    timeFrame,
+                    from,
+                    historicalCount
+                );
+
+                if (candlesHistory.length > 0) {
+                    const oldestExisting = candles[0].time;
+                    const filteredHistory = candlesHistory.filter(c => c.time < oldestExisting);
+
+                    if (filteredHistory.length > 0) {
+                        setCandles((prev: Candle[]) => [...filteredHistory, ...prev]);
+                    }
+                }
+            }
+        };
+
+        chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
+
+        return () => {
+            chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
+        };
+    }, [candles.length]);
+
     useEffect(() => {
         if (seriesRef.current && candles.length > 0) {
-            const formattedData = candles.map(candle => ({
-                time: candle.time as Time,
-                open: candle.open,
-                high: candle.high,
-                low: candle.low,
-                close: candle.close,
-            }));
+            const timezoneOffsetSeconds = new Date().getTimezoneOffset() * -60;
+
+            const formattedData = candles.map(candle => {
+                const timeInSeconds = Math.floor(candle.time / 1000) + timezoneOffsetSeconds;
+
+                return {
+                    time: timeInSeconds as Time,
+                    open: candle.open,
+                    high: candle.high,
+                    low: candle.low,
+                    close: candle.close,
+                };
+            });
+
             seriesRef.current.setData(formattedData);
+            candlesRef.current = [...candles];
+            if (candles.length > 0) {
+                lastCandleRef.current = { ...candles[candles.length - 1] };
+            }
         }
-    }, [candles]);
+    }, [candles, timeFrame]);
 
-    // --------------------------------- form candles realtime  ---------------------------------
+    /* --------------------------------- form candles realtime  --------------------------------- */
 
-    // new candle starts.
-    const getStartCandle = (timestamp: number, timeFrameMinutes: number) => {
-        const intervalMs = timeFrameMinutes * 60_000;
-        return Math.floor(timestamp / intervalMs) * intervalMs;
-    };
-
-    // form candles 
     const handleTick = useCallback(
         (tick: IncomingInsSocketMsgProp) => {
-            
             if (tick.symbol !== selectedSymbol) return;
 
-            const price = (tick.ask + tick.bid) / 2;
-            const ts = getStartCandle(tick.time, timeFrame);
+            const price = tick.bid;
+            const tsMs = getStartCandle(tick.time, timeFrame);
+            const tsSeconds = Math.floor(tsMs / 1000);
+
+            const timezoneOffsetSeconds = new Date().getTimezoneOffset() * -60;
+            const localTsSeconds = tsSeconds + timezoneOffsetSeconds;
 
             const last = lastCandleRef.current;
-            if (!last || last.time !== ts) {
+            const lastTsSeconds = last ? Math.floor(last.time / 1000) : 0;
+
+            if (!last || lastTsSeconds !== tsSeconds) {
                 const newCandle: Candle = {
-                    time: ts,
+                    time: tsMs,
                     open: price,
                     high: price,
                     low: price,
@@ -136,7 +211,7 @@ export default function Chart() {
                 lastCandleRef.current = newCandle;
 
                 seriesRef.current?.update({
-                    time: newCandle.time as unknown as Time,
+                    time: localTsSeconds as Time,
                     open: newCandle.open,
                     high: newCandle.high,
                     low: newCandle.low,
@@ -150,18 +225,16 @@ export default function Chart() {
             last.low = Math.min(last.low, price);
 
             seriesRef.current?.update({
-                time: last.time as Time,
+                time: localTsSeconds as Time,
                 open: last.open,
                 high: last.high,
                 low: last.low,
                 close: last.close,
             });
         },
-        [lastCandleRef, selectedSymbol, timeFrame]
+        [selectedSymbol, timeFrame]
     );
 
-
-    // rendering candle
     const { incomingInsSocketMsg } = useSocket();
 
     useEffect(() => {
@@ -172,6 +245,14 @@ export default function Chart() {
         });
     }, [handleTick, incomingInsSocketMsg]);
 
+    if (error) {
+        return (
+            <div className="h-full w-full flex-col overflow-hidden bg-white pt-20 text-center">
+                {error}
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-full w-full flex-col overflow-hidden">
             {/* topbar  */}
@@ -181,7 +262,14 @@ export default function Chart() {
                 {/* toolbar */}
                 <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">T</div>
                 {/* main chart candles  */}
-                <div ref={containerRef} className="ml-1 flex-1 overflow-hidden rounded-sm" />
+                <div className="relative ml-1 flex-1 overflow-hidden rounded-sm">
+                    <div ref={containerRef} className="h-full w-full" />
+                    {isLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white">
+                            <Spinner />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
