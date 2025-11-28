@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MoreVertical, Search, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +10,7 @@ import { Input } from './ui/input';
 import { Spinner } from './ui/spinner';
 import { useSocket } from '@/hooks/useSocket';
 import { setLocalStorage } from '@/lib/localStorage';
+import { useInstrument } from '@/hooks/useInstrument';
 
 export interface InstrumentProp {
     id: string;
@@ -32,6 +33,8 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
         Map<string, { ask: string | null; bid: string | null }>
     >(new Map());
 
+    const { selectedSymbol, setSelectedSymbolPrice } = useInstrument();
+
     useEffect(() => {
         const fetchFavoritesInstruments = async () => {
             try {
@@ -49,6 +52,16 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                     const data = await response.json();
                     setInstruments(data.data);
                     const favSymbols = data.data.map((ins: InstrumentProp) => ins.symbol);
+
+                    // intial price of selected symbol
+                    let _selectedSymbolPrice: InstrumentProp = data.data.find(
+                        (ins: InstrumentProp) => ins.symbol === selectedSymbol
+                    );
+                    setSelectedSymbolPrice({
+                        buy: _selectedSymbolPrice.bid,
+                        sell: _selectedSymbolPrice.ask,
+                        time: Date.now(),
+                    });
                     setLocalStorage('fav-instruments', favSymbols);
                 }
             } catch (err: unknown) {
@@ -67,6 +80,8 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
 
     // update prices of instrument sent by ws server
     const { incomingInsSocketMsg } = useSocket();
+
+    const flashTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
     useEffect(() => {
         if (!incomingInsSocketMsg || !Array.isArray(incomingInsSocketMsg)) return;
@@ -96,6 +111,22 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                     // Store flash colors per symbol
                     if (askFlash || bidFlash) {
                         newFlashColors.set(ins.symbol, { ask: askFlash, bid: bidFlash });
+
+                        const existingTimeout = flashTimeoutsRef.current.get(ins.symbol);
+                        if (existingTimeout) {
+                            clearTimeout(existingTimeout);
+                        }
+
+                        const timeoutId = setTimeout(() => {
+                            setFlashColors(current => {
+                                const updated = new Map(current);
+                                updated.delete(ins.symbol);
+                                return updated;
+                            });
+                            flashTimeoutsRef.current.delete(ins.symbol);
+                        }, 300);
+
+                        flashTimeoutsRef.current.set(ins.symbol, timeoutId);
                     }
 
                     return {
@@ -107,24 +138,20 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                 return ins;
             });
 
-            // Update flash colors map
             if (newFlashColors.size > 0) {
                 setFlashColors(newFlashColors);
-
-                setTimeout(() => {
-                    setFlashColors(current => {
-                        const updated = new Map(current);
-                        newFlashColors.forEach((_, symbol) => {
-                            updated.delete(symbol);
-                        });
-                        return updated;
-                    });
-                }, 500);
             }
 
             return updatedInstruments;
         });
     }, [incomingInsSocketMsg]);
+
+    useEffect(() => {
+        return () => {
+            flashTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+            flashTimeoutsRef.current.clear();
+        };
+    }, []);
 
     if (error && !isLoading) {
         return <div className="p-4">{error}</div>;
