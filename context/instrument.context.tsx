@@ -4,93 +4,96 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { InstrumentContext } from '@/hooks/useInstrument';
-import { Candle } from '@/types';
+import { Candle, PricesProp } from '@/types';
 import { setLocalStorage } from '@/lib/localStorage';
 import { normalizeSymbol } from '@/lib/helper';
 
 export interface InstrumentContextType {
     selectedSymbol: string;
+    selectedSymbolPrice: PricesProp | undefined;
+    setSelectedSymbolPrice: (data: PricesProp) => void;
     candles: Candle[];
-    setCandles: (candle: Candle[]) => void;
+    setCandles: (candle: Candle[] | ((prev: Candle[]) => Candle[])) => void;
     isLoading: boolean;
     error: string;
     handleChangeSymbol: (symbol: string) => void;
     timeFrame: number;
-    setTimeFrame: (tf: number) => void;
 }
 
 interface InstrumentProviderProp {
     children: React.ReactNode;
 }
 
-function calculateFrom(interval: number, count: number) {
-    const now = Date.now();
+export async function fetchHistoryCandles(
+    symbol: string,
+    timeFrame: number,
+    from: number,
+    count: number
+): Promise<Candle[]> {
+    const sym = normalizeSymbol(symbol);
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/${sym}/candles?time_frame=${timeFrame}&from=${from}&count=${count}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            }
+        );
 
-    // minutes : milliseconds
-    const msPerInterval: Record<string, number> = {
-        '1': 60_000,
-        '5': 5 * 60_000,
-        '15': 15 * 60_000,
-        '30': 30 * 60_000,
-        '60': 60 * 60_000,
-        '240': 4 * 60 * 60_000,
-        '1440': 24 * 60 * 60_000,
-        '10800': 7 * 24 * 60 * 60_000,
-        '43200': 30 * 24 * 60 * 60_000,
-    };
+        if (!response.ok) {
+            throw new Error('Failed to fetch Chart candles');
+        }
 
-    const intervalMs = msPerInterval[interval] ?? 5 * 60_000;
-    return now - count * intervalMs;
+        const data = await response.json();
+        return data.priceHistory;
+    } catch (err: unknown) {
+        throw err;
+    }
 }
 
 export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children }) => {
     const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USD');
+    const [selectedSymbolPrice, setSelectedSymbolPrice] = useState<PricesProp | undefined>();
     const [candles, setCandles] = useState<Candle[]>([]);
-    const [timeFrame, setTimeFrame] = useState(5); // 5min // measuring in unit minutes
-    const [from] = useState<number>(() => calculateFrom(5 * 60_000, 200));
-    const [count] = useState(200); // candles count
+    const [from] = useState<number>(Number.MAX_SAFE_INTEGER);
+    const [timeFrame, setTimeFrame] = useState(5);
+    const [count] = useState(-300);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    // fetching history candles data of selected instrument
-    useEffect(() => {
-        const fetchCandles = async () => {
-            setError('');
-            setIsLoading(true);
-            const sym = normalizeSymbol(selectedSymbol);
-            try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/${sym}/candles?time_frame=${timeFrame}&from=${from}&count=${count}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                    }
-                );
+    const fetchCandles = useCallback(async () => {
+        try {
+            const candles = await fetchHistoryCandles(selectedSymbol, timeFrame, from, count);
+            setCandles(candles);
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch Chart');
-                }
-
-                const data = await response.json();
-                setCandles(data.priceHistory);
-            } catch (err: unknown) {
-                console.error(`Error in fetching symbol ${selectedSymbol} candle`, err);
-                const errMsg =
-                    err instanceof Error
-                        ? err.message
-                        : 'Something went wrong while fetching candles data';
-                setError(errMsg);
-            } finally {
-                setIsLoading(false);
+            if (candles && candles.length > 0) {
+                const latestCandle = candles[candles.length - 1];
+                setSelectedSymbolPrice({
+                    buy: latestCandle.close,
+                    sell: latestCandle.close,
+                    time: latestCandle.time,
+                });
             }
-        };
+        } catch (err: unknown) {
+            console.error(`Error in fetching symbol ${selectedSymbol} candle`, err);
+            const errMsg =
+                err instanceof Error
+                    ? err.message
+                    : 'Something went wrong while fetching candles data';
+            setError(errMsg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
         fetchCandles();
-    }, [count, from, selectedSymbol, timeFrame]);
+    }, []);
 
     const handleChangeSymbol = (symbol: string) => {
         setSelectedSymbol(symbol);
@@ -103,6 +106,8 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
 
     const value = {
         selectedSymbol,
+        selectedSymbolPrice,
+        setSelectedSymbolPrice,
         candles,
         setCandles,
         isLoading,
