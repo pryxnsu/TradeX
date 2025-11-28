@@ -26,9 +26,7 @@ export default function Loader({ children }: { children: React.ReactNode }) {
                 <div className="text-center text-sm text-gray-600">
                     {connectionError || 'Unable to connect to server'}
                 </div>
-                <div className="text-xs text-gray-400">
-                    Please check your connection and refresh
-                </div>
+                <div className="text-xs text-gray-400">Please check your connection and refresh</div>
             </div>
         );
     }
@@ -53,9 +51,7 @@ export default function Loader({ children }: { children: React.ReactNode }) {
     if (connectionStatus === 'reconnecting') {
         return (
             <div className="flex h-screen items-center justify-center gap-3">
-                <div className="text-sm font-medium text-amber-600">
-                    Connection lost, reconnecting...
-                </div>
+                <div className="text-sm font-medium text-amber-600">Connection lost, reconnecting...</div>
                 <Spinner className="size-8" />
             </div>
         );

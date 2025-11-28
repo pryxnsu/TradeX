@@ -50,8 +50,7 @@ export default function Navbar() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-semibold">
-                                        {wallet?.equity.toFixed(2) || 0.0}{' '}
-                                        {wallet?.currency || 'USD'}
+                                        {wallet?.equity.toFixed(2) || 0.0} {wallet?.currency || 'USD'}
                                     </span>
                                     <ChevronDown />
                                 </div>
@@ -61,26 +60,11 @@ export default function Navbar() {
                     <PopoverContent className="w-80 px-4 py-3">
                         <div className="mx-auto w-full max-w-md">
                             <div className="space-y-2">
-                                <BalanceRow
-                                    name="Balance"
-                                    value={wallet?.balance.toFixed(2) || 0.0}
-                                />
-                                <BalanceRow
-                                    name="Equity"
-                                    value={wallet?.equity.toFixed(2) || 0.0}
-                                />
-                                <BalanceRow
-                                    name="Margin"
-                                    value={wallet?.margin.toFixed(2) || 0.0}
-                                />
-                                <BalanceRow
-                                    name="Free Margin"
-                                    value={wallet?.freeMargin.toFixed(2) || 0.0}
-                                />
-                                <BalanceRow
-                                    name="Account Leverage"
-                                    value={`1:${wallet?.leverage || 0}`}
-                                />
+                                <BalanceRow name="Balance" value={wallet?.balance.toFixed(2) || 0.0} />
+                                <BalanceRow name="Equity" value={wallet?.equity.toFixed(2) || 0.0} />
+                                <BalanceRow name="Margin" value={wallet?.margin.toFixed(2) || 0.0} />
+                                <BalanceRow name="Free Margin" value={wallet?.freeMargin.toFixed(2) || 0.0} />
+                                <BalanceRow name="Account Leverage" value={`1:${wallet?.leverage || 0}`} />
                             </div>
 
                             <div className="mt-5 grid grid-cols-2 gap-3">

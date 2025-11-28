@@ -49,13 +49,7 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
                     const currentPrice = p.type === 0 ? updatedPriceData.ask : updatedPriceData.bid;
 
                     const updatedPnl =
-                        calculatePnl(
-                            normalizedPositionSymbol,
-                            side,
-                            p.openPrice,
-                            currentPrice,
-                            p.volume
-                        ) ?? 0;
+                        calculatePnl(normalizedPositionSymbol, side, p.openPrice, currentPrice, p.volume) ?? 0;
 
                     totalPnl += updatedPnl;
 

@@ -2,7 +2,7 @@ import { PanelTypes } from '@/types';
 import { getLocalStorage, setLocalStorage } from '@/lib/localStorage';
 import { useEffect, useState } from 'react';
 
-// manage current active pandel 
+// manage current active pandel
 export const useActivePanel = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [activePanel, setActivePanel] = useState<PanelTypes>(null);
@@ -17,7 +17,6 @@ export const useActivePanel = () => {
             setIsLoading(false);
         })();
     }, []);
-
 
     const handleActivePanel = (panelName: PanelTypes) => {
         setActivePanel(panelName);
@@ -36,6 +35,6 @@ export const useActivePanel = () => {
         handleActivePanel,
         handlePanelResize,
         isPanelVisible,
-        setIsPanelVisible
+        setIsPanelVisible,
     };
 };

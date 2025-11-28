@@ -11,8 +11,7 @@ export default function HeroSection() {
                 </h1>
 
                 <p className="mt-6 max-w-2xl text-xl leading-relaxed font-light text-white/90 drop-shadow-sm">
-                    Exness clone (a trading platform). A personal project built with passion and
-                    modern tech.
+                    Exness clone (a trading platform). A personal project built with passion and modern tech.
                 </p>
 
                 <Link href={'/login'}>

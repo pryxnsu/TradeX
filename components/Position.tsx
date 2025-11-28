@@ -1,14 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit2, X } from 'lucide-react';
 import { ClosedPositonProp, OpenPositionProp } from '@/types';
@@ -75,17 +68,11 @@ export default function Position({
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <div
-                                        className={cn(
-                                            pos.type === 0 ? 'text-blue-500' : 'text-red-500'
-                                        )}
-                                    >
+                                    <div className={cn(pos.type === 0 ? 'text-blue-500' : 'text-red-500')}>
                                         ● {pos.type == 0 ? 'Buy' : 'Sell'}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-foreground text-left">
-                                    {pos.volume.toFixed(2)}
-                                </TableCell>
+                                <TableCell className="text-foreground text-left">{pos.volume.toFixed(2)}</TableCell>
                                 <TableCell className="text-foreground text-left underline decoration-dashed">
                                     {pos.openPrice.toLocaleString()}
                                 </TableCell>
@@ -107,9 +94,7 @@ export default function Position({
                                 <TableCell className="text-foreground w-42 truncate px-1 font-mono text-sm">
                                     <div className="max-w-42 truncate">{pos.position}</div>
                                 </TableCell>
-                                <TableCell className="text-foreground text-sm">
-                                    {getDate(pos.openTime)}
-                                </TableCell>
+                                <TableCell className="text-foreground text-sm">{getDate(pos.openTime)}</TableCell>
                                 {'closeTime' in pos && pos.closeTime && (
                                     <TableCell className="text-foreground px-1 text-sm">
                                         {getDate(pos.closeTime)}
@@ -129,11 +114,7 @@ export default function Position({
                                         <div className="flex gap-2">
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="h-8 w-8 p-0"
-                                                    >
+                                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                                                         <Edit2 className="h-4 w-4" />
                                                     </Button>
                                                 </DialogTrigger>
@@ -141,16 +122,11 @@ export default function Position({
                                                 <DialogContent className="w-1/3 rounded-xl px-5 py-3">
                                                     <DialogHeader className="space-y-1">
                                                         <DialogTitle className="flex items-center justify-between text-lg font-semibold">
-                                                            <Instrument
-                                                                symbol={pos.symbol}
-                                                                iconSize={30}
-                                                            />
+                                                            <Instrument symbol={pos.symbol} iconSize={30} />
                                                             <span
                                                                 className={cn(
                                                                     'mr-6 text-right text-sm',
-                                                                    pos.pnl >= 0
-                                                                        ? 'text-green-600'
-                                                                        : 'text-red-600'
+                                                                    pos.pnl >= 0 ? 'text-green-600' : 'text-red-600'
                                                                 )}
                                                             >
                                                                 {pos.pnl > 0 && '+'}
@@ -164,9 +140,7 @@ export default function Position({
 
                                                         <DialogDescription className="flex justify-between">
                                                             <span>Buy at {pos.openPrice}</span>
-                                                            {'currentPrice' in pos && (
-                                                                <span>{pos?.currentPrice}</span>
-                                                            )}
+                                                            {'currentPrice' in pos && <span>{pos?.currentPrice}</span>}
                                                         </DialogDescription>
                                                     </DialogHeader>
 
@@ -175,9 +149,7 @@ export default function Position({
                                                             <Label>Volume to close</Label>
                                                             <Input
                                                                 onChange={e =>
-                                                                    setPartialCloseVolume(
-                                                                        Number(e.target.value)
-                                                                    )
+                                                                    setPartialCloseVolume(Number(e.target.value))
                                                                 }
                                                                 id="close-volume"
                                                                 placeholder="0.1"
@@ -188,8 +160,8 @@ export default function Position({
 
                                                             {partialCloseVolume > pos.volume && (
                                                                 <p>
-                                                                    Error: Close volume cant be more
-                                                                    than existing volume
+                                                                    Error: Close volume cant be more than existing
+                                                                    volume
                                                                 </p>
                                                             )}
                                                         </div>
@@ -198,9 +170,7 @@ export default function Position({
                                                     <DialogFooter>
                                                         <DialogClose asChild>
                                                             <Button
-                                                                disabled={
-                                                                    partialCloseVolume > pos.volume
-                                                                }
+                                                                disabled={partialCloseVolume > pos.volume}
                                                                 variant={'destructive'}
                                                                 className="w-full"
                                                                 onClick={() => {
@@ -222,9 +192,7 @@ export default function Position({
                                                         Estimate profit:{' '}
                                                         <span
                                                             className={cn(
-                                                                pos.pnl > 0
-                                                                    ? 'text-green-500'
-                                                                    : 'text-red-500'
+                                                                pos.pnl > 0 ? 'text-green-500' : 'text-red-500'
                                                             )}
                                                         >
                                                             {pos.pnl > 0 && '+'}
@@ -237,12 +205,7 @@ export default function Position({
                                             <Button
                                                 onClick={() => {
                                                     if ('currentPrice' in pos) {
-                                                        onClose?.(
-                                                            pos.position,
-                                                            pos.currentPrice,
-                                                            pos.volume,
-                                                            0
-                                                        );
+                                                        onClose?.(pos.position, pos.currentPrice, pos.volume, 0);
                                                     }
                                                 }}
                                                 size="sm"

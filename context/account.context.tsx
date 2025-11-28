@@ -3,12 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AccountContext } from '@/hooks/useAccount';
 import { setLocalStorage } from '@/lib/localStorage';
-import {
-    IncomingSocketEventType,
-    IncomingSocketPositionsType,
-    OpenPositionProp,
-    Wallet,
-} from '@/types';
+import { IncomingSocketEventType, IncomingSocketPositionsType, OpenPositionProp, Wallet } from '@/types';
 
 export interface AccountContextType {
     wallet: Wallet | null;
@@ -19,12 +14,7 @@ export interface AccountContextType {
     setOpenPositions: React.Dispatch<React.SetStateAction<OpenPositionProp[]>>;
     openPositionLoading: boolean;
     openPositionError: string | null;
-    handleClosePosition: (
-        positionId: string,
-        price: number,
-        volume: number,
-        closeById: number
-    ) => void;
+    handleClosePosition: (positionId: string, price: number, volume: number, closeById: number) => void;
     handlePositionEvent: (msg: IncomingSocketEventType) => void;
 }
 
@@ -40,16 +30,13 @@ const useFetchWallet = () => {
     useEffect(() => {
         const fetchWallet = async () => {
             try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/wallet/demo`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                    }
-                );
+                const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/wallet/demo`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                });
 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch wallet: ${response.statusText}`);
@@ -62,10 +49,7 @@ const useFetchWallet = () => {
             } catch (err: unknown) {
                 console.error('Error in fetching user wallet', err);
 
-                const errMsg =
-                    err instanceof Error
-                        ? err.message
-                        : 'Something went wrong while fetching wallet data';
+                const errMsg = err instanceof Error ? err.message : 'Something went wrong while fetching wallet data';
                 setError(errMsg);
             } finally {
                 setIsLoading(false);
@@ -91,16 +75,13 @@ const useFetchOpenPositions = () => {
     useEffect(() => {
         const fetchPositions = async () => {
             try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/positions`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                    }
-                );
+                const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/positions`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                });
 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch positions: ${response.statusText}`);
@@ -113,9 +94,7 @@ const useFetchOpenPositions = () => {
                 console.error('Error in fetching active positions', err);
 
                 const errMsg =
-                    err instanceof Error
-                        ? err.message
-                        : 'Something went wrong while fetching active positions';
+                    err instanceof Error ? err.message : 'Something went wrong while fetching active positions';
                 setError(errMsg);
             } finally {
                 setIsLoading(false);
@@ -148,12 +127,7 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
     const addPosition = (p: IncomingSocketPositionsType) => {
         setOpenPositions(prev => {
             try {
-                if (
-                    !p.positionId ||
-                    !p.instrument ||
-                    p.openPrice === undefined ||
-                    p.volume === undefined
-                ) {
+                if (!p.positionId || !p.instrument || p.openPrice === undefined || p.volume === undefined) {
                     console.warn('Invalid position data:', p);
                     return prev;
                 }
@@ -235,12 +209,7 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
         }
     };
 
-    const handleClosePosition = async (
-        positionId: string,
-        price: number,
-        volume: number,
-        closeById: number
-    ) => {
+    const handleClosePosition = async (positionId: string, price: number, volume: number, closeById: number) => {
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${wallet?.id}/position/${positionId}/close`,

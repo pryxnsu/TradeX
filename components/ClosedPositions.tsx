@@ -39,9 +39,7 @@ export default function ClosedPositions({ activeTab }: { activeTab: string }) {
                 console.error('Error in fetching active positions', err);
 
                 const errMsg =
-                    err instanceof Error
-                        ? err.message
-                        : 'Something went wrong while fetching active positions';
+                    err instanceof Error ? err.message : 'Something went wrong while fetching active positions';
                 setError(errMsg);
             } finally {
                 setIsLoading(false);
@@ -61,12 +59,7 @@ export default function ClosedPositions({ activeTab }: { activeTab: string }) {
             if (prev.length === 0) return prev;
 
             const closePosition = incomingPositionsSocketMsg
-                .filter(
-                    item =>
-                        item.e === 'positions' &&
-                        (item.t === 'close' || item.t === 'part_close') &&
-                        item.d
-                )
+                .filter(item => item.e === 'positions' && (item.t === 'close' || item.t === 'part_close') && item.d)
                 .map(item => {
                     const positionData = item.d as IncomingSocketPositionsType;
                     return {

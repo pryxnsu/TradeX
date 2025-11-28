@@ -9,9 +9,7 @@ export default function LandingNavbar() {
         <nav className="fixed top-6 right-0 left-0 z-50 flex justify-center px-4">
             <div className="flex w-full max-w-5xl items-center justify-between rounded-full border border-white/20 bg-white/10 px-6 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
                 <Link href="/" className="flex items-center gap-2">
-                    <span className="font-serif text-2xl font-bold tracking-wide text-white italic">
-                        Exness
-                    </span>
+                    <span className="font-serif text-2xl font-bold tracking-wide text-white italic">Exness</span>
                 </Link>
 
                 <div className="flex items-center gap-3">

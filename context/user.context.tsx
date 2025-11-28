@@ -39,8 +39,7 @@ export const UserProvider: React.FC<UserProviderProp> = ({ children }) => {
                     setLocalStorage('user', data.user);
                 }
             } catch (err: unknown) {
-                const errorMessage =
-                    err instanceof Error ? err.message : 'Something went wrong while fetching user';
+                const errorMessage = err instanceof Error ? err.message : 'Something went wrong while fetching user';
                 setError(errorMessage);
                 setIsAuthenticated(false);
                 setUser(null);

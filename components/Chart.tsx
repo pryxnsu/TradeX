@@ -133,12 +133,7 @@ export default function Chart() {
 
                 const from = candles[0].time - timeFrame * 60 * 1000;
 
-                const candlesHistory = await fetchHistoryCandles(
-                    selectedSymbol,
-                    timeFrame,
-                    from,
-                    historicalCount
-                );
+                const candlesHistory = await fetchHistoryCandles(selectedSymbol, timeFrame, from, historicalCount);
 
                 if (candlesHistory.length > 0) {
                     const oldestExisting = candles[0].time;
@@ -246,11 +241,7 @@ export default function Chart() {
     }, [handleTick, incomingInsSocketMsg]);
 
     if (error) {
-        return (
-            <div className="h-full w-full flex-col overflow-hidden bg-white pt-20 text-center">
-                {error}
-            </div>
-        );
+        return <div className="h-full w-full flex-col overflow-hidden bg-white pt-20 text-center">{error}</div>;
     }
 
     return (

@@ -81,10 +81,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
             }
         } catch (err: unknown) {
             console.error(`Error in fetching symbol ${selectedSymbol} candle`, err);
-            const errMsg =
-                err instanceof Error
-                    ? err.message
-                    : 'Something went wrong while fetching candles data';
+            const errMsg = err instanceof Error ? err.message : 'Something went wrong while fetching candles data';
             setError(errMsg);
         } finally {
             setIsLoading(false);

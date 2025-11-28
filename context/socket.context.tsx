@@ -15,12 +15,7 @@ export interface IncomingInsSocketMsgProp {
     time: number;
 }
 
-export type ConnectionStatus =
-    | 'connecting'
-    | 'connected'
-    | 'disconnected'
-    | 'error'
-    | 'reconnecting';
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
 export interface SocketContextType {
     socketRef: React.RefObject<WebSocket | null>;
@@ -39,12 +34,8 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     const socketRef = useRef<WebSocket | null>(null);
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
     const [connectionError, setConnectionError] = useState<string | null>(null);
-    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<
-        IncomingInsSocketMsgProp[] | null
-    >(null);
-    const [incomingPositionsSocketMsg, setIncomingPositionsSocketMsg] = useState<
-        IncomingSocketEventType[]
-    >([]);
+    const [incomingInsSocketMsg, setIncomingInsSocketMsg] = useState<IncomingInsSocketMsgProp[] | null>(null);
+    const [incomingPositionsSocketMsg, setIncomingPositionsSocketMsg] = useState<IncomingSocketEventType[]>([]);
     const priceCacheRef = useRef(new Map<string, IncomingInsSocketMsgProp>());
 
     const reconnectAttemptsRef = useRef<number>(0);
@@ -277,10 +268,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
             return;
         }
 
-        const delay = Math.min(
-            baseReconnectDelay * Math.pow(2, reconnectAttemptsRef.current),
-            30000
-        );
+        const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttemptsRef.current), 30000);
 
         reconnectAttemptsRef.current += 1;
         setConnectionStatus('reconnecting');
@@ -292,14 +280,12 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
         socketRef.current = null;
 
         setTimeout(() => connect(), delay);
-    };
+    }
 
     useEffect(() => {
         const intervalId = setInterval(() => {
             if (priceCacheRef.current.size > 0) {
-                const latestPrices = Array.from(
-                    priceCacheRef.current.values()
-                ) as IncomingInsSocketMsgProp[];
+                const latestPrices = Array.from(priceCacheRef.current.values()) as IncomingInsSocketMsgProp[];
                 setIncomingInsSocketMsg(latestPrices);
             }
         }, 100);

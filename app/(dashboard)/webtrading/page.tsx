@@ -34,8 +34,7 @@ export const DEFAULT_SIZE_OF_POSITION_PANEL = 7;
 export const OPENED_SIZE_OF_POSITION_PANEL = 35;
 
 export default function Page() {
-    const { activePanel, handleActivePanel, handlePanelResize, isPanelVisible, setIsPanelVisible } =
-        useActivePanel();
+    const { activePanel, handleActivePanel, handlePanelResize, isPanelVisible, setIsPanelVisible } = useActivePanel();
 
     const positionPanelRef = useRef<ImperativePanelHandle | null>(null);
     const [positionPanelOpen, setPositionPanelOpen] = useState(false);
@@ -85,9 +84,7 @@ export default function Page() {
                                 onResize={handlePanelResize}
                                 className="mr-1 w-sm max-w-fit rounded-tl-sm rounded-tr-sm bg-white"
                             >
-                                {activePanel == 'instruments' && (
-                                    <Instruments onClose={handleActivePanel} />
-                                )}
+                                {activePanel == 'instruments' && <Instruments onClose={handleActivePanel} />}
                                 {activePanel == 'calender' && <p>Calender</p>}
                                 {activePanel == 'settings' && <p>Settings</p>}
                             </ResizablePanel>
@@ -126,10 +123,7 @@ export default function Page() {
                                 onResize={handlePositionPanelOpen}
                                 className="mt-1 flex h-full w-full flex-col rounded-sm bg-white"
                             >
-                                <Positions
-                                    positionPanelOpen={positionPanelOpen}
-                                    positionPanelRef={positionPanelRef}
-                                />
+                                <Positions positionPanelOpen={positionPanelOpen} positionPanelRef={positionPanelRef} />
                             </ResizablePanel>
                         </ResizablePanelGroup>
 

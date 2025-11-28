@@ -6,10 +6,7 @@
 import { ChevronUp, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from './ui/button';
-import {
-    DEFAULT_SIZE_OF_POSITION_PANEL,
-    OPENED_SIZE_OF_POSITION_PANEL,
-} from '@/app/(dashboard)/webtrading/page';
+import { DEFAULT_SIZE_OF_POSITION_PANEL, OPENED_SIZE_OF_POSITION_PANEL } from '@/app/(dashboard)/webtrading/page';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import { RefObject, useState } from 'react';
 import OpenPositions from './OpenPositions';

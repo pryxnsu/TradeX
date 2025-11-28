@@ -17,10 +17,8 @@ export function InstrumentRow({
     flashBidColor: string | null;
     flashAskColor: string | null;
 }) {
-    const isPositive =
-        String(instrument?.change).startsWith('-') === false && String(instrument.change) !== '-';
-    const isNegative =
-        String(instrument?.change).startsWith('-') && String(instrument.change) !== '-';
+    const isPositive = String(instrument?.change).startsWith('-') === false && String(instrument.change) !== '-';
+    const isNegative = String(instrument?.change).startsWith('-') && String(instrument.change) !== '-';
 
     // change selected symbol
     const { handleChangeSymbol } = useInstrument();
@@ -29,10 +27,7 @@ export function InstrumentRow({
     const oneDayChange = isPositive ? '+' + instrument.change : instrument.change;
     return (
         <TableRow className="select-none">
-            <TableCell
-                onClick={() => handleChangeSymbol(instrument.symbol)}
-                className="flex items-center gap-2"
-            >
+            <TableCell onClick={() => handleChangeSymbol(instrument.symbol)} className="flex items-center gap-2">
                 <span className="cursor-pointer">
                     <GripVertical size={16} />
                 </span>
@@ -43,16 +38,10 @@ export function InstrumentRow({
                 <div
                     className={cn(
                         'inline-flex rounded-xs p-[2px]',
-                        instrument?.signal === 'up'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-red-500 text-white'
+                        instrument?.signal === 'up' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
                     )}
                 >
-                    {instrument?.signal === 'up' ? (
-                        <ArrowUp className="h-4 w-4" />
-                    ) : (
-                        <ArrowDown className="h-4 w-4" />
-                    )}
+                    {instrument?.signal === 'up' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
                 </div>
             </TableCell>
 
@@ -88,11 +77,7 @@ export function InstrumentRow({
                         ) : null}
                         <span
                             className={`font-mono text-xs font-semibold ${
-                                isPositive
-                                    ? 'text-green-600'
-                                    : isNegative
-                                      ? 'text-red-600'
-                                      : 'text-foreground'
+                                isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-foreground'
                             }`}
                         >
                             {oneDayChange}

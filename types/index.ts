@@ -94,11 +94,7 @@ export type InstrumentConfig = {
 export type IncomingSocketEventType = {
     e: 'positions' | 'orders' | 'accounts' | 'deals';
     t: 'new' | 'del' | 'open' | 'in' | 'upd' | 'close' | 'part_close';
-    d:
-        | IncomingSocketOrderType
-        | IncomingSocketPositionsType
-        | IncomingSocketDealsType
-        | IncomingSocketAccountType;
+    d: IncomingSocketOrderType | IncomingSocketPositionsType | IncomingSocketDealsType | IncomingSocketAccountType;
 };
 
 export type IncomingSocketOrderType = {

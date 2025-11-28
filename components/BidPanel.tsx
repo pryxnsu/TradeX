@@ -76,25 +76,22 @@ const placeOrder = async (data: {
             throw new Error('Minimum volume is 0.01 lots');
         }
 
-        const response = await fetch(
-            `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${walletId}/orders`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    oneClick: false,
-                    instrument,
-                    price,
-                    sl: sl === undefined ? 0 : sl,
-                    tp: tp === undefined ? 0 : tp,
-                    type,
-                    volume,
-                }),
-                credentials: 'include',
-            }
-        );
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${walletId}/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                oneClick: false,
+                instrument,
+                price,
+                sl: sl === undefined ? 0 : sl,
+                tp: tp === undefined ? 0 : tp,
+                type,
+                volume,
+            }),
+            credentials: 'include',
+        });
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -197,8 +194,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
         } catch (err: unknown) {
             console.error('[Error] Failed to place order', err);
 
-            const errMsg =
-                err instanceof Error ? err.message : 'Something went wrong while placing order';
+            const errMsg = err instanceof Error ? err.message : 'Something went wrong while placing order';
 
             setError(errMsg);
             toast.error('Order Failed', {
@@ -222,10 +218,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                 <div className="flex items-center gap-2">
                     <Instrument symbol={selectedSymbol} iconSize={25} />
                 </div>
-                <button
-                    onClick={onClose}
-                    className="cursor-pointer text-gray-400 hover:text-gray-600"
-                >
+                <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600">
                     <X className="h-5 w-5" />
                 </button>
             </div>
@@ -242,20 +235,10 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                                 side === 'sell' ? 'bg-red-500 hover:bg-red-500' : 'bg-transparent'
                             )}
                         >
-                            <div
-                                className={cn(
-                                    'text-sm font-thin text-red-600',
-                                    side === 'sell' && 'text-white'
-                                )}
-                            >
+                            <div className={cn('text-sm font-thin text-red-600', side === 'sell' && 'text-white')}>
                                 Sell
                             </div>
-                            <div
-                                className={cn(
-                                    'text-xs text-red-600',
-                                    side === 'sell' && 'text-white'
-                                )}
-                            >
+                            <div className={cn('text-xs text-red-600', side === 'sell' && 'text-white')}>
                                 {selectedSymbolPrice?.sell.toLocaleString()}
                             </div>
                         </Button>
@@ -268,20 +251,10 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                                 side === 'buy' ? 'bg-blue-500 hover:bg-blue-500' : 'bg-transparent'
                             )}
                         >
-                            <div
-                                className={cn(
-                                    'text-sm font-thin text-blue-600',
-                                    side === 'buy' && 'text-white'
-                                )}
-                            >
+                            <div className={cn('text-sm font-thin text-blue-600', side === 'buy' && 'text-white')}>
                                 Buy
                             </div>
-                            <div
-                                className={cn(
-                                    'text-xs text-blue-600',
-                                    side === 'buy' && 'text-white'
-                                )}
-                            >
+                            <div className={cn('text-xs text-blue-600', side === 'buy' && 'text-white')}>
                                 {selectedSymbolPrice?.buy.toLocaleString()}
                             </div>
                         </Button>
@@ -384,9 +357,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                         </Button>
                     </div>
                     {tpWarning && (
-                        <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">
-                            {tpWarning}
-                        </div>
+                        <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">{tpWarning}</div>
                     )}
                 </div>
 
@@ -429,16 +400,12 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                         </Button>
                     </div>
                     {slWarning && (
-                        <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">
-                            {slWarning}
-                        </div>
+                        <div className="mt-1 flex items-center gap-1 text-xs text-amber-600">{slWarning}</div>
                     )}
                 </div>
 
                 {error && (
-                    <div className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-                        {error}
-                    </div>
+                    <div className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm text-red-600">{error}</div>
                 )}
 
                 <div className="flex flex-col gap-2">
@@ -453,9 +420,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                                 : 'bg-red-500 text-white hover:bg-red-500 hover:text-white disabled:bg-red-300'
                         )}
                     >
-                        {isOrderPlacing
-                            ? 'Placing order...'
-                            : `Confirm ${side?.toUpperCase()} ${volume} lots`}
+                        {isOrderPlacing ? 'Placing order...' : `Confirm ${side?.toUpperCase()} ${volume} lots`}
                     </Button>
                     <Button
                         type="button"

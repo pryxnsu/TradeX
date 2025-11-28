@@ -42,10 +42,7 @@ export default function Instrument({
         <div className={cn('flex items-center gap-3 px-2 py-1', className)}>
             <div className="h-fit w-fit shrink-0">
                 {isDoubleSymbol ? (
-                    <div
-                        className="relative"
-                        style={{ width: `${iconSize}px`, height: `${iconSize}px` }}
-                    >
+                    <div className="relative" style={{ width: `${iconSize}px`, height: `${iconSize}px` }}>
                         <div
                             className="absolute overflow-hidden rounded-full ring-[1px] ring-neutral-300"
                             style={{

@@ -29,25 +29,20 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
 
-    const [flashColors, setFlashColors] = useState<
-        Map<string, { ask: string | null; bid: string | null }>
-    >(new Map());
+    const [flashColors, setFlashColors] = useState<Map<string, { ask: string | null; bid: string | null }>>(new Map());
 
     const { selectedSymbol, setSelectedSymbolPrice } = useInstrument();
 
     useEffect(() => {
         const fetchFavoritesInstruments = async () => {
             try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/favorites`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                    }
-                );
+                const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/favorites`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                });
                 if (response.ok) {
                     const data = await response.json();
                     setInstruments(data.data);
@@ -65,10 +60,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                     setLocalStorage('fav-instruments', favSymbols);
                 }
             } catch (err: unknown) {
-                const errorMessage =
-                    err instanceof Error
-                        ? err.message
-                        : 'An unexpected error occurred while parsing';
+                const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while parsing';
                 setError(errorMessage);
                 console.error('Error in fetching instruments', err);
             } finally {
@@ -90,9 +82,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
             const newFlashColors = new Map<string, { ask: string | null; bid: string | null }>();
 
             const updatedInstruments = prev.map(ins => {
-                const priceData = incomingInsSocketMsg.find(
-                    (msg: { symbol: string }) => msg.symbol === ins.symbol
-                );
+                const priceData = incomingInsSocketMsg.find((msg: { symbol: string }) => msg.symbol === ins.symbol);
                 if (priceData) {
                     const askFlash =
                         priceData.ask > ins.ask
@@ -164,12 +154,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                     <Button variant="ghost" size="icon" className="text-foreground">
                         <MoreVertical className="h-5 w-5" />
                     </Button>
-                    <Button
-                        onClick={() => onClose(null)}
-                        variant="ghost"
-                        size="icon"
-                        className="text-foreground"
-                    >
+                    <Button onClick={() => onClose(null)} variant="ghost" size="icon" className="text-foreground">
                         <X className="h-5 w-5" />
                     </Button>
                 </div>
@@ -197,9 +182,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[200px]">Symbol</TableHead>
-                                <TableHead className="min-w-25 p-1 px-3 text-center">
-                                    Signal
-                                </TableHead>
+                                <TableHead className="min-w-25 p-1 px-3 text-center">Signal</TableHead>
                                 <TableHead className="min-w-25 p-1 px-3">Bid</TableHead>
                                 <TableHead className="min-w-25 p-1 px-3">Ask</TableHead>
                                 <TableHead className="w-[150px]">1D change</TableHead>
