@@ -269,7 +269,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
         };
     }, [subscribeUnsubscribe]);
 
-    const reconnect = () => {
+    function reconnect() {
         if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
             setConnectionStatus('error');
             setConnectionError('Failed to connect with server! Please try again later');
