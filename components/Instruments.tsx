@@ -54,7 +54,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                     const favSymbols = data.data.map((ins: InstrumentProp) => ins.symbol);
 
                     // intial price of selected symbol
-                    let _selectedSymbolPrice: InstrumentProp = data.data.find(
+                    const _selectedSymbolPrice: InstrumentProp = data.data.find(
                         (ins: InstrumentProp) => ins.symbol === selectedSymbol
                     );
                     setSelectedSymbolPrice({
