@@ -414,7 +414,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                         disabled={isOrderPlacing || !selectedSymbolPrice || !wallet?.id}
                         variant={'outline'}
                         className={cn(
-                            'h-11 rounded-sm',
+                            'h-11 cursor-pointer rounded-sm',
                             side === 'buy'
                                 ? 'bg-blue-500 text-white hover:bg-blue-500 hover:text-white disabled:bg-blue-300'
                                 : 'bg-red-500 text-white hover:bg-red-500 hover:text-white disabled:bg-red-300'

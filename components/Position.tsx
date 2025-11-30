@@ -114,7 +114,11 @@ export default function Position({
                                         <div className="flex gap-2">
                                             <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="h-8 w-8 cursor-pointer p-0"
+                                                    >
                                                         <Edit2 className="h-4 w-4" />
                                                     </Button>
                                                 </DialogTrigger>
@@ -210,7 +214,7 @@ export default function Position({
                                                 }}
                                                 size="sm"
                                                 variant="ghost"
-                                                className="h-8 w-8 p-0"
+                                                className="h-8 w-8 cursor-pointer p-0"
                                             >
                                                 <X className="h-4 w-4" />
                                             </Button>
