@@ -176,7 +176,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
             toast.error('Validation Error', { description: validationError });
             return;
         }
-
+        setIsOrderPlacing(true);
         try {
             await placeOrder({
                 walletId: wallet?.id,
@@ -293,7 +293,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                             name="volume"
                             value={volume}
                             onChange={handleInputChange}
-                            className="border-0 text-sm shadow-none ring-0 focus:border-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="[appearance:textfield] border-0 text-sm shadow-none ring-0 focus:border-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                             placeholder="Not set"
                         />
                         <span className="px-3 text-xs text-gray-500">Lots</span>
