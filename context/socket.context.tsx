@@ -206,6 +206,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                     case 'account': {
                         if (parsedData.t === 'upd') {
                             if (!parsedData.d) break;
+                            console.log('Wallet updated', parsedData.d.balance.balance);
                         }
                     }
                 }
@@ -288,7 +289,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                 const latestPrices = Array.from(priceCacheRef.current.values()) as IncomingInsSocketMsgProp[];
                 setIncomingInsSocketMsg(latestPrices);
             }
-        }, 100);
+        }, 300);
         return () => clearInterval(intervalId);
     }, []);
 
