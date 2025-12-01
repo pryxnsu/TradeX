@@ -31,7 +31,7 @@ export default function Position({
     activeTab: string;
     p: OpenPositionProp[] | ClosedPositonProp[];
     onClose?: (positionId: string, price: number, volume: number, closeById: number) => void;
-    closingPositionId: string | null;
+    closingPositionId?: string | null;
 }) {
     const [partialCloseVolume, setPartialCloseVolume] = useState<number>(0.1);
     console.log('p', p);
