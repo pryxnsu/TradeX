@@ -20,17 +20,21 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from './ui/label';
+import { Spinner } from './ui/spinner';
 
 export default function Position({
     activeTab,
     p,
     onClose,
+    closingPositionId,
 }: {
     activeTab: string;
     p: OpenPositionProp[] | ClosedPositonProp[];
     onClose?: (positionId: string, price: number, volume: number, closeById: number) => void;
+    closingPositionId: string | null;
 }) {
     const [partialCloseVolume, setPartialCloseVolume] = useState<number>(0.1);
+    console.log('p', p);
     return (
         <div className="bg-card flex h-full flex-col overflow-hidden rounded-md pb-2">
             <div className="flex-1 overflow-auto">
@@ -85,10 +89,20 @@ export default function Position({
                                         {pos.currentPrice.toLocaleString()}
                                     </TableCell>
                                 )}
-                                <TableCell className="text-foreground px-1 text-center underline decoration-dashed">
+                                <TableCell
+                                    className={cn(
+                                        'text-foreground px-1 text-center',
+                                        pos.tp > 0 && 'underline decoration-dashed'
+                                    )}
+                                >
                                     {pos.tp > 0 ? pos.tp?.toFixed(2) : '-'}
                                 </TableCell>
-                                <TableCell className="text-foreground px-1 text-center underline decoration-dashed">
+                                <TableCell
+                                    className={cn(
+                                        'text-foreground px-1 text-center',
+                                        pos.tp > 0 && 'underline decoration-dashed'
+                                    )}
+                                >
                                     {pos.sl > 0 ? pos.sl?.toFixed(2) : '-'}
                                 </TableCell>
                                 <TableCell className="text-foreground w-42 truncate px-1 font-mono text-sm">
@@ -216,7 +230,11 @@ export default function Position({
                                                 variant="ghost"
                                                 className="h-8 w-8 cursor-pointer p-0"
                                             >
-                                                <X className="h-4 w-4" />
+                                                {closingPositionId === pos.position ? (
+                                                    <Spinner />
+                                                ) : (
+                                                    <X className="h-4 w-4" />
+                                                )}
                                             </Button>
                                         </div>
                                     </TableCell>

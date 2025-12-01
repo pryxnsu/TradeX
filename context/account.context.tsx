@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AccountContext } from '@/hooks/useAccount';
 import { setLocalStorage } from '@/lib/localStorage';
 import { IncomingSocketEventType, IncomingSocketPositionsType, OpenPositionProp, Wallet } from '@/types';
+import { toast } from 'sonner';
 
 export interface AccountContextType {
     wallet: Wallet | null;
@@ -14,6 +15,7 @@ export interface AccountContextType {
     setOpenPositions: React.Dispatch<React.SetStateAction<OpenPositionProp[]>>;
     openPositionLoading: boolean;
     openPositionError: string | null;
+    closingPositionId: string | null;
     handleClosePosition: (positionId: string, price: number, volume: number, closeById: number) => void;
     handlePositionEvent: (msg: IncomingSocketEventType) => void;
 }
@@ -124,6 +126,8 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
         error: openPositionError,
     } = useFetchOpenPositions();
 
+    const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
+
     const addPosition = (p: IncomingSocketPositionsType) => {
         setOpenPositions(prev => {
             try {
@@ -211,6 +215,7 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
 
     const handleClosePosition = async (positionId: string, price: number, volume: number, closeById: number) => {
         try {
+            setClosingPositionId(positionId);
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${wallet?.id}/position/${positionId}/close`,
                 {
@@ -232,6 +237,11 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
             }
         } catch (err: unknown) {
             console.error('Error occured while closing position', err);
+            toast.error('Something went wrong', {
+                description: 'Failed to close position',
+            });
+        } finally {
+            setClosingPositionId(null);
         }
     };
 
@@ -245,6 +255,7 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
         openPositionLoading,
         openPositionError,
         handleClosePosition,
+        closingPositionId,
         handlePositionEvent,
     };
     return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;

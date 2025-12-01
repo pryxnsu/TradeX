@@ -18,6 +18,7 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
         openPositionLoading,
         openPositionError,
         handleClosePosition,
+        closingPositionId,
         handlePositionEvent,
     } = useAccount();
 
@@ -120,5 +121,12 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
             </div>
         );
     }
-    return <Position activeTab={activeTab} p={openPositions} onClose={handleClosePosition} />;
+    return (
+        <Position
+            activeTab={activeTab}
+            p={openPositions}
+            onClose={handleClosePosition}
+            closingPositionId={closingPositionId}
+        />
+    );
 }
