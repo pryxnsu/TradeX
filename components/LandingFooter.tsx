@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function LandingFooter() {
     return (
-        <footer className="h-[400px] w-full">
+        <footer className="w-full">
             <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-gray-500 md:flex-row">
                 <div className="flex items-center gap-2">
                     <span className="font-serif text-lg font-bold text-gray-900 italic">Exness</span>
@@ -12,7 +12,7 @@ export default function LandingFooter() {
                 <div className="font-medium text-gray-400">
                     Built by{' '}
                     <Link
-                        href="https://x.com/0xSunye"
+                        href="https://x.com/pryxnsu"
                         target="_blank"
                         className="text-gray-600 transition-colors hover:text-gray-900"
                     >
