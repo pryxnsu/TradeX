@@ -167,13 +167,13 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                                 console.log('Order has been deleted', parsedData.d.orderId);
                             }
                         }
+                        break;
                     }
 
                     case 'positions': {
+                        if (!parsedData.d) break;
                         const side = parsedData.d.type === 'buy' ? 'Buy' : 'Sell';
                         if (parsedData.t === 'open') {
-                            if (!parsedData.d) break;
-
                             console.log('Position has been opened', parsedData.d.positionId);
 
                             toast.success('Position opened.', {
@@ -195,19 +195,22 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                             });
                         }
                         setIncomingPositionsSocketMsg(prev => [...prev, parsedData]);
+                        break;
                     }
 
                     case 'deals': {
                         if (parsedData.t === 'in') {
                             console.log('Deals has been done!');
                         }
+                        break;
                     }
 
                     case 'account': {
                         if (parsedData.t === 'upd') {
                             if (!parsedData.d) break;
-                            console.log('Wallet updated', parsedData.d.balance.balance);
+                            console.log('Wallet updated', parsedData?.d?.balance?.balance);
                         }
+                        break;
                     }
                 }
 
