@@ -34,7 +34,6 @@ export default function Position({
     closingPositionId?: string | null;
 }) {
     const [partialCloseVolume, setPartialCloseVolume] = useState<number>(0.1);
-    console.log('p', p);
     return (
         <div className="bg-card flex h-full flex-col overflow-hidden rounded-md pb-2">
             <div className="flex-1 overflow-auto">
