@@ -4,11 +4,11 @@
  */
 
 import { ChevronUp, X } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from './ui/button';
 import { DEFAULT_SIZE_OF_POSITION_PANEL, OPENED_SIZE_OF_POSITION_PANEL } from '@/app/(dashboard)/webtrading/page';
 import { ImperativePanelHandle } from 'react-resizable-panels';
-import { RefObject, useState } from 'react';
+import { Activity, RefObject, useState } from 'react';
 import OpenPositions from './OpenPositions';
 import ClosedPositions from './ClosedPositions';
 
@@ -65,15 +65,19 @@ export default function Positions({
                     </Button>
                 )}
             </TabsList>
-            <TabsContent value="open" className="h-full flex-1 overflow-auto">
-                <OpenPositions activeTab={activePositionTab} />
-            </TabsContent>
-            <TabsContent value="pending" className="flex-1 overflow-auto">
-                Pending Positions (Coming soon)
-            </TabsContent>
-            <TabsContent value="closed" className="flex-1 overflow-auto">
-                <ClosedPositions activeTab={activePositionTab} />
-            </TabsContent>
+            <Activity mode={activePositionTab === 'open' ? 'visible' : 'hidden'}>
+                <div className="h-full flex-1 overflow-auto">
+                    <OpenPositions activeTab={activePositionTab} />
+                </div>
+            </Activity>
+            <Activity mode={activePositionTab === 'pending' ? 'visible' : 'hidden'}>
+                <div className="flex-1 overflow-auto">Pending Positions (Coming soon)</div>
+            </Activity>
+            <Activity mode={activePositionTab === 'closed' ? 'visible' : 'hidden'}>
+                <div className="flex-1 overflow-auto">
+                    <ClosedPositions activeTab={activePositionTab} />
+                </div>
+            </Activity>
         </Tabs>
     );
 }

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Menu, Settings } from 'lucide-react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useActivePanel } from '@/hooks/useActivePanel';
-import { useState, useRef } from 'react';
+import { useState, useRef, Activity } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import { PanelTypes } from '@/types';
 import BidPanel from '@/components/BidPanel';
@@ -77,22 +77,31 @@ export default function Page() {
                 </aside>
                 <ResizablePanelGroup direction="horizontal" className="h-full w-full flex-1">
                     {/* left instruments panel  */}
-                    {activePanel && isPanelVisible && (
+                    <Activity mode={activePanel && isPanelVisible ? 'visible' : 'hidden'}>
                         <>
                             <ResizablePanel
                                 defaultSize={30}
                                 onResize={handlePanelResize}
                                 className="mr-1 w-sm max-w-fit rounded-tl-sm rounded-tr-sm bg-white"
                             >
-                                {activePanel == 'instruments' && <Instruments onClose={handleActivePanel} />}
-                                {activePanel == 'calender' && <p>Calender</p>}
-                                {activePanel == 'settings' && <p>Settings</p>}
+                                <Activity mode={activePanel === 'instruments' ? 'visible' : 'hidden'}>
+                                    <Instruments onClose={handleActivePanel} />
+                                </Activity>
+
+                                <Activity mode={activePanel === 'calender' ? 'visible' : 'hidden'}>
+                                    <p>Calender</p>
+                                </Activity>
+
+                                <Activity mode={activePanel === 'settings' ? 'visible' : 'hidden'}>
+                                    <p>Settings</p>
+                                </Activity>
                             </ResizablePanel>
 
                             {/* handle showing only if side panel exists */}
                             <ResizableHandle className="bg-transparent" />
                         </>
-                    )}
+                    </Activity>
+
                     {/* right panel  */}
                     <ResizablePanel
                         defaultSize={70}
@@ -105,11 +114,11 @@ export default function Page() {
                                     <Chart />
                                 </div>
                                 {/* Place bid  */}
-                                {placeBidPanel && (
+                                <Activity mode={placeBidPanel ? 'visible' : 'hidden'}>
                                     <div className="ml-1 w-[280px] max-w-[280px] min-w-[280px] rounded-l-sm bg-white">
                                         <BidPanel onClose={() => setPlaceBidPanel(false)} />
                                     </div>
-                                )}
+                                </Activity>
                             </ResizablePanel>
 
                             {/* resize handle  */}
