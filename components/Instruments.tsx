@@ -137,9 +137,10 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
     }, [incomingInsSocketMsg]);
 
     useEffect(() => {
+        const timeoutsMap = flashTimeoutsRef.current;
         return () => {
-            flashTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
-            flashTimeoutsRef.current.clear();
+            timeoutsMap.forEach(timeout => clearTimeout(timeout));
+            timeoutsMap.clear();
         };
     }, []);
 
