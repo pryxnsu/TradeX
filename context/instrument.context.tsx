@@ -86,11 +86,11 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [count, from, selectedSymbol, timeFrame]);
 
     useEffect(() => {
         fetchCandles();
-    }, []);
+    }, [fetchCandles, selectedSymbol]);
 
     const handleChangeSymbol = (symbol: string) => {
         setSelectedSymbol(symbol);
