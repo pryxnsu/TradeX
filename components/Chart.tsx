@@ -15,6 +15,8 @@ import { useSocket } from '@/hooks/useSocket';
 import { IncomingInsSocketMsgProp } from '@/context/socket.context';
 import { Spinner } from './ui/spinner';
 import { fetchHistoryCandles } from '@/context/instrument.context';
+import { ArrowRight, ChevronLeft } from 'lucide-react';
+import { Button } from './ui/button';
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -245,22 +247,14 @@ export default function Chart() {
     }
 
     return (
-        <div className="flex h-full w-full flex-col overflow-hidden">
-            {/* topbar  */}
-            <div className="h-10 shrink-0 rounded-tl-sm bg-white text-center">topbar</div>
-
-            <div className="mt-1 flex flex-1 overflow-hidden">
-                {/* toolbar */}
-                <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">T</div>
-                {/* main chart candles  */}
-                <div className="relative ml-1 flex-1 overflow-hidden rounded-sm">
-                    <div ref={containerRef} className="h-full w-full" />
-                    {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white">
-                            <Spinner />
-                        </div>
-                    )}
-                </div>
+        <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
+            <div className="relative ml-1 flex-1 overflow-hidden rounded-sm">
+                <div ref={containerRef} className="h-full w-full" />
+                {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white">
+                        <Spinner />
+                    </div>
+                )}
             </div>
         </div>
     );

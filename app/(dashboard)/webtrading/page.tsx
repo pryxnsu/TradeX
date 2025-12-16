@@ -5,7 +5,7 @@ import Instruments from '@/components/Instruments';
 import Navbar from '@/components/Navbar';
 import Chart from '@/components/Chart';
 import { Button } from '@/components/ui/button';
-import { Calendar, Menu, Settings } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Menu, Settings } from 'lucide-react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useActivePanel } from '@/hooks/useActivePanel';
 import { useState, useRef, Activity } from 'react';
@@ -80,7 +80,7 @@ export default function Page() {
                     <Activity mode={activePanel && isPanelVisible ? 'visible' : 'hidden'}>
                         <>
                             <ResizablePanel
-                                defaultSize={30}
+                                defaultSize={25}
                                 onResize={handlePanelResize}
                                 className="mr-1 w-sm max-w-fit rounded-tl-sm rounded-tr-sm bg-white"
                             >
@@ -104,14 +104,27 @@ export default function Page() {
 
                     {/* right panel  */}
                     <ResizablePanel
-                        defaultSize={70}
+                        defaultSize={75}
                         className="flex h-full flex-1 flex-col rounded-tl-sm bg-neutral-100"
                     >
                         <ResizablePanelGroup direction="vertical" className="flex-1">
                             {/* Chart  */}
                             <ResizablePanel defaultSize={93} className="flex">
-                                <div className="min-w-0 flex-1">
-                                    <Chart />
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                    <div className="flex h-10 shrink-0 items-center justify-between rounded-tl-sm bg-white px-4 text-center">
+                                        <div>TOPBAR</div>
+                                        <Button
+                                            onClick={() => setPlaceBidPanel(!placeBidPanel)}
+                                            variant={'outline'}
+                                            className="h-7 w-7 cursor-pointer rounded-sm"
+                                        >
+                                            {placeBidPanel ? <ChevronRight /> : <ChevronLeft />}
+                                        </Button>
+                                    </div>
+                                    <div className="mt-1 flex h-full w-full">
+                                        <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">T</div>
+                                        <Chart />
+                                    </div>
                                 </div>
                                 {/* Place bid  */}
                                 <Activity mode={placeBidPanel ? 'visible' : 'hidden'}>
