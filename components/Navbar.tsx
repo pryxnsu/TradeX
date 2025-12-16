@@ -7,6 +7,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import FavoriteInstruments from './FavoriteInstruments';
 import { useUser } from '@/hooks/useUser';
 import { useAccount } from '@/hooks/useAccount';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Spinner } from './ui/spinner';
 
 const MENU_ITEMS = [
     { label: 'Manage Accounts', icon: true },
@@ -17,6 +21,42 @@ const MENU_ITEMS = [
 export default function Navbar() {
     const { user } = useUser();
     const { wallet } = useAccount();
+
+    const router = useRouter();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/auth/logout`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to logout. Please try again');
+            }
+
+            const data = await response.json();
+            toast.success('Logout', { description: data.message });
+            router.push('/login');
+        } catch (err: unknown) {
+            console.error(`Error in logout`, err);
+            const errMsg = err instanceof Error ? err.message : 'Something went wrong while logging out';
+            toast.error('Validation Error', { description: errMsg });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
+
+    if (isLoggingOut) {
+        return (
+            <div className="fixed inset-0 z-50 flex h-screen w-full items-center justify-center gap-2 bg-white/80 backdrop-blur-sm">
+                <p className="text-lg font-medium">Logging out...</p>
+                <Spinner className="size-4" />
+            </div>
+        );
+    }
     return (
         <div className="flex w-full items-center justify-between px-4 py-3">
             <div className="flex items-center justify-between gap-6">
@@ -96,6 +136,7 @@ export default function Navbar() {
                             <div className="border-b px-3 pb-4">{user?.email}</div>
                             <div className="pt-3">
                                 <Button
+                                    onClick={handleLogout}
                                     className="h-11 w-full justify-start rounded-none border-none shadow-none"
                                     variant="outline"
                                 >
