@@ -82,7 +82,7 @@ export default function Page() {
                             <ResizablePanel
                                 defaultSize={25}
                                 onResize={handlePanelResize}
-                                className="mr-1 w-sm max-w-fit rounded-tl-sm rounded-tr-sm bg-white"
+                                className="mr-1 max-w-1/2 rounded-tl-sm rounded-tr-sm bg-white"
                             >
                                 <Activity mode={activePanel === 'instruments' ? 'visible' : 'hidden'}>
                                     <Instruments onClose={handleActivePanel} />
