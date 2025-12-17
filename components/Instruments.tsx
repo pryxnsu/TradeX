@@ -1,34 +1,26 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MoreVertical, Search, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PanelTypes } from '@/types';
-import { InstrumentRow } from './InstrumentRow';
+import { InstrumentProp, PanelTypes } from '@/types';
 import { Input } from './ui/input';
 import { Spinner } from './ui/spinner';
 import { useSocket } from '@/hooks/useSocket';
 import { setLocalStorage } from '@/lib/localStorage';
 import { useInstrument } from '@/hooks/useInstrument';
-
-export interface InstrumentProp {
-    id: string;
-    sortOrder: number;
-    signal: string;
-    symbol: string;
-    bid: number;
-    ask: number;
-    change: number;
-    pl?: string;
-}
+import { toast } from 'sonner';
+import InstrumentsTable from './InstrumentsTable';
+import { addToFavorite, removeFromFavorite } from '@/lib/helper';
+import { useDebouncedCallback } from 'use-debounce';
 
 export default function Instruments({ onClose }: { onClose: (type: PanelTypes) => void }) {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [instruments, setInstruments] = useState<InstrumentProp[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
-
+    const [isSearching, setIsSearching] = useState<boolean>(false);
+    const [searchedInstruments, setSearchedInstruments] = useState<InstrumentProp[]>([]);
     const [flashColors, setFlashColors] = useState<Map<string, { ask: string | null; bid: string | null }>>(new Map());
 
     const { selectedSymbol, setSelectedSymbolPrice } = useInstrument();
@@ -45,30 +37,42 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setInstruments(data.data);
+                    // adding isFavorite field in data
+                    const updatedData =
+                        Array.isArray(data.data) &&
+                        data.data.map((x: InstrumentProp) => {
+                            return {
+                                ...x,
+                                isFavorite: true,
+                            };
+                        });
+                    setInstruments(updatedData);
+
                     const favSymbols = data.data.map((ins: InstrumentProp) => ins.symbol);
 
                     // intial price of selected symbol
                     const _selectedSymbolPrice: InstrumentProp = data.data.find(
                         (ins: InstrumentProp) => ins.symbol === selectedSymbol
                     );
+                    setLocalStorage('fav-instruments', favSymbols);
+                    if (!_selectedSymbolPrice) return;
+
                     setSelectedSymbolPrice({
                         buy: _selectedSymbolPrice.bid,
                         sell: _selectedSymbolPrice.ask,
                         time: Date.now(),
                     });
-                    setLocalStorage('fav-instruments', favSymbols);
                 }
             } catch (err: unknown) {
+                console.error('Error in fetching instruments', err);
                 const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while parsing';
                 setError(errorMessage);
-                console.error('Error in fetching instruments', err);
             } finally {
                 setIsLoading(false);
             }
         };
         fetchFavoritesInstruments();
-    }, [selectedSymbol, setSelectedSymbolPrice]);
+    }, []);
 
     // update prices of instrument sent by ws server
     const { incomingInsSocketMsg } = useSocket();
@@ -136,6 +140,109 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
         });
     }, [incomingInsSocketMsg]);
 
+    const handleInstrumentSearch = async (query?: string) => {
+        const target = query ?? searchQuery;
+        if (!target || target === '') {
+            setSearchedInstruments([]);
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/search?symbol=${target}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to search instrument');
+            }
+
+            const data = await response.json();
+
+            // adding isFavorite field in data
+            const symbols = instruments.map(x => x.symbol);
+
+            const updatedData =
+                Array.isArray(data.data) &&
+                data.data.map((ins: InstrumentProp) => ({
+                    ...ins,
+                    isFavorite: symbols.includes(ins.symbol),
+                }));
+            setSearchedInstruments(updatedData);
+        } catch (err: unknown) {
+            console.log('[Error] occured while search instrument', err);
+            const errMsg = err instanceof Error ? err.message : 'Failed to search instrument';
+            toast.error('Error occurred', {
+                description: errMsg,
+            });
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const debouncedSearch = useDebouncedCallback((query: string) => {
+        handleInstrumentSearch(query);
+    }, 1000);
+
+    const handleAddFavorite = useCallback(async (id: string) => {
+        setSearchedInstruments(prev =>
+            prev.map(ins =>
+                ins.id === id
+                    ? {
+                          ...ins,
+                          isFavorite: true,
+                      }
+                    : ins
+            )
+        );
+
+        try {
+            const res = await addToFavorite(id);
+            if (!res) return;
+
+            setInstruments(prev =>
+                prev.some(x => x.id === res.id)
+                    ? prev
+                    : [
+                          ...prev,
+                          {
+                              ...res,
+                              isFavorite: true,
+                          },
+                      ]
+            );
+        } catch (err: unknown) {
+            console.error('[Error] occured while adding instrument to favorites', err);
+            const errMsg = err instanceof Error ? err.message : 'Failed to add instrument';
+
+            toast.error('Error occurred', {
+                description: errMsg,
+            });
+        }
+    }, []);
+
+    const handleRemoveFavorite = async (id: string) => {
+        setInstruments(prev => prev.filter(x => x.id !== id));
+
+        try {
+            const res = await removeFromFavorite(id);
+            if (!res) return;
+        } catch (err: unknown) {
+            console.error('[Error] occured while remove instrument from favorites', err);
+            const errMsg = err instanceof Error ? err.message : 'Failed to remove instrument';
+
+            toast.error('Error occurred', {
+                description: errMsg,
+            });
+        }
+    };
+
     useEffect(() => {
         const timeoutsMap = flashTimeoutsRef.current;
         return () => {
@@ -148,7 +255,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
         return <div className="p-4">{error}</div>;
     }
     return (
-        <div className="mx-auto p-3">
+        <div className="mx-auto h-full p-3">
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-sm text-black">INSTRUMENTS</h1>
                 <div className="flex items-center gap-2">
@@ -161,53 +268,47 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                 </div>
             </div>
 
-            <div className="mb-6 flex gap-4">
-                <div className="relative flex-1">
+            <div className="relative mb-6 flex gap-4">
+                <div className="border-input bg-background focus-within:ring-ring relative flex flex-1 items-center rounded-md border focus-within:ring-2">
                     <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform" />
                     <Input
                         placeholder="Search"
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="bg-background border-input text-foreground placeholder:text-muted-foreground pl-10"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            const val = e.target.value.toUpperCase();
+                            setSearchQuery(val);
+                            debouncedSearch(val);
+                        }}
+                        className="text-foreground placeholder:text-muted-foreground border-none bg-transparent pl-10 shadow-none focus-visible:ring-0"
                     />
+                    {searchQuery && (
+                        <X
+                            onClick={() => {
+                                setSearchQuery('');
+                                setSearchedInstruments([]);
+                                debouncedSearch.cancel();
+                            }}
+                            size={18}
+                            className="text-muted-foreground mr-2 cursor-pointer"
+                        />
+                    )}
                 </div>
             </div>
 
-            <div className="bg-card h-full overflow-hidden rounded-lg">
+            <div className="bg-card h-full w-full overflow-hidden rounded-lg">
                 {isLoading ? (
                     <div className="w-full">
                         <Spinner className="mx-auto size-6" />
                     </div>
                 ) : (
-                    <Table className="flex-1">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[200px]">Symbol</TableHead>
-                                <TableHead className="min-w-25 p-1 px-3 text-center">Signal</TableHead>
-                                <TableHead className="min-w-25 p-1 px-3">Bid</TableHead>
-                                <TableHead className="min-w-25 p-1 px-3">Ask</TableHead>
-                                <TableHead className="w-[150px]">1D change</TableHead>
-                                <TableHead className="w-[120px]">P/L, USD</TableHead>
-                                <TableHead className="w-[60px]">
-                                    <Star size={15} className="w-full text-center" />
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {!isLoading &&
-                                instruments?.map(instrument => {
-                                    const flash = flashColors.get(instrument.symbol);
-                                    return (
-                                        <InstrumentRow
-                                            key={instrument?.symbol}
-                                            instrument={instrument}
-                                            flashAskColor={flash?.ask || null}
-                                            flashBidColor={flash?.bid || null}
-                                        />
-                                    );
-                                })}
-                        </TableBody>
-                    </Table>
+                    <InstrumentsTable
+                        isLoading={searchedInstruments ? isSearching : isLoading}
+                        instruments={searchedInstruments.length > 0 ? searchedInstruments : instruments}
+                        flashColors={flashColors}
+                        isSearched={searchedInstruments.length > 0 ? true : false}
+                        addInstrumentToFavorite={handleAddFavorite}
+                        removeInstrumentToFavorite={handleRemoveFavorite}
+                    />
                 )}
             </div>
         </div>

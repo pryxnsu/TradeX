@@ -169,3 +169,15 @@ export interface PricesProp {
 }
 
 export type Side = 'buy' | 'sell';
+
+export interface InstrumentProp {
+    id: string;
+    sortOrder: number;
+    signal: string;
+    symbol: string;
+    bid: number;
+    ask: number;
+    change: number;
+    pl?: string;
+    isFavorite: boolean;
+}

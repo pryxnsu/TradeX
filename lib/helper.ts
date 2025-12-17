@@ -1,4 +1,4 @@
-import { InstrumentConfig } from '@/types';
+import { InstrumentConfig, InstrumentProp } from '@/types';
 
 export function getDate(date: Date | string) {
     const d = new Date(date);
@@ -54,3 +54,53 @@ export function calculatePnl(
 
     return pnl;
 }
+
+export const addToFavorite = async (instrumentId: string): Promise<InstrumentProp | void> => {
+    if (!instrumentId || instrumentId === '') return;
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/favorites`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                instrumentId,
+                sortOrder: 1,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to add instrument to Favorite');
+        }
+
+        const data = await response.json();
+        console.log('add data', data);
+        return data.data as InstrumentProp;
+    } catch (err: unknown) {
+        throw err;
+    }
+};
+
+export const removeFromFavorite = async (instrumentId: string): Promise<{ id: string } | void> => {
+    if (!instrumentId || instrumentId === '') return;
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/instruments/${instrumentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to remove instrument from Favorite');
+        }
+
+        const data = await response.json();
+        console.log('remove data', data);
+        return data.data;
+    } catch (err: unknown) {
+        throw err;
+    }
+};

@@ -1,21 +1,29 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, TrendingUp, TrendingDown, Star, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Instrument from './Instrument';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { InstrumentProp } from './Instruments';
+import { InstrumentProp } from '@/types';
 import { useInstrument } from '@/hooks/useInstrument';
-import { cn } from '@/lib/utils';
 
 export function InstrumentRow({
     instrument,
     flashBidColor,
     flashAskColor,
+    isSearched,
+    isFavorite,
+    onAddToFav,
+    onRemoveFromFav,
 }: {
     instrument: InstrumentProp;
     flashBidColor: string | null;
     flashAskColor: string | null;
+    isSearched?: boolean;
+    isFavorite: boolean;
+    onAddToFav: (instrumentId: string) => void;
+    onRemoveFromFav: (instrumentId: string) => void;
 }) {
     const isPositive = String(instrument?.change).startsWith('-') === false && String(instrument.change) !== '-';
     const isNegative = String(instrument?.change).startsWith('-') && String(instrument.change) !== '-';
@@ -28,9 +36,11 @@ export function InstrumentRow({
     return (
         <TableRow className="select-none">
             <TableCell onClick={() => handleChangeSymbol(instrument.symbol)} className="flex items-center gap-2">
-                <span className="cursor-pointer">
-                    <GripVertical size={16} />
-                </span>
+                {isSearched === false && (
+                    <span className="cursor-pointer">
+                        <GripVertical size={16} />
+                    </span>
+                )}
                 <Instrument symbol={instrument.symbol} iconSize={25} />
             </TableCell>
 
@@ -101,10 +111,15 @@ export function InstrumentRow({
                 <Button
                     variant="ghost"
                     size="icon"
-                    // TODO: add request to remove from favorite
-                    className="cursor-pointer text-yellow-500 hover:bg-transparent hover:text-yellow-600"
+                    onClick={
+                        isFavorite === true ? () => onRemoveFromFav(instrument.id) : () => onAddToFav(instrument.id)
+                    }
+                    className={cn(
+                        'cursor-pointer hover:bg-transparent',
+                        isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-black hover:text-black'
+                    )}
                 >
-                    <Star className="h-5 w-5" fill="currentColor" stroke="currentColor" />
+                    <Star className="h-5 w-5" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" />
                 </Button>
             </TableCell>
         </TableRow>
