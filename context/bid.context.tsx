@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BidContext } from '@/hooks/useBid';
 import { Side } from '@/types';
 import { useInstrument } from '@/hooks/useInstrument';
@@ -39,8 +39,6 @@ export const BidProvider: React.FC<BidProviderProp> = ({ children }) => {
     const [stopLoss, setStopLoss] = useState<number | undefined>(undefined);
     const [isOrderPlacing, setIsOrderPlacing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [tpWarning, setTpWarning] = useState<string | null>(null);
-    const [slWarning, setSlWarning] = useState<string | null>(null);
 
     const { incomingInsSocketMsg } = useSocket();
 
@@ -55,36 +53,32 @@ export const BidProvider: React.FC<BidProviderProp> = ({ children }) => {
                 time: instrument.time,
             });
         }
-    }, [incomingInsSocketMsg, selectedSymbol]);
+    }, [incomingInsSocketMsg, selectedSymbol, setSelectedSymbolPrice]);
 
-    useEffect(() => {
-        if (!selectedSymbolPrice || !side) return;
+    const { tpWarning, slWarning } = useMemo(() => {
+        if (!selectedSymbolPrice || !side) return { tpWarning: null, slWarning: null };
 
-        const currentPrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
+        const { buy, sell } = selectedSymbolPrice;
+        let tp = null;
+        let sl = null;
 
-        if (takeProfit !== undefined && takeProfit !== 0) {
-            if (side === 'buy' && currentPrice >= takeProfit) {
-                setTpWarning(`Mininum ${selectedSymbolPrice.buy}`);
-            } else if (side === 'sell' && currentPrice <= takeProfit) {
-                setTpWarning(`Mininum ${selectedSymbolPrice.sell}`);
-            } else {
-                setTpWarning(null);
+        if (takeProfit && takeProfit !== 0) {
+            if (side === 'buy' && takeProfit <= buy) {
+                tp = `Must be above ${buy}`;
+            } else if (side === 'sell' && takeProfit >= sell) {
+                tp = `Must be below ${sell}`;
             }
-        } else {
-            setTpWarning(null);
         }
 
-        if (stopLoss !== undefined && stopLoss !== 0) {
-            if (side === 'buy' && currentPrice <= stopLoss) {
-                setSlWarning(`Mininum ${selectedSymbolPrice.sell}`);
-            } else if (side === 'sell' && currentPrice >= stopLoss) {
-                setSlWarning(`Mininum ${selectedSymbolPrice.buy}`);
-            } else {
-                setSlWarning(null);
+        if (stopLoss && stopLoss !== 0) {
+            if (side === 'buy' && stopLoss >= sell) {
+                sl = `Must be below ${sell}`;
+            } else if (side === 'sell' && stopLoss <= buy) {
+                sl = `Must be above ${buy}`;
             }
-        } else {
-            setSlWarning(null);
         }
+
+        return { tpWarning: tp, slWarning: sl };
     }, [selectedSymbolPrice, side, takeProfit, stopLoss]);
 
     const value = {
