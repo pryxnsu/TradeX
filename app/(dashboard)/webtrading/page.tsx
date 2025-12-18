@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, Menu, Settings } from 'lucide-react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useActivePanel } from '@/hooks/useActivePanel';
-import { useState, useRef, Activity } from 'react';
+import { useState, useRef, Activity, useEffect } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import { PanelTypes } from '@/types';
 import BidPanel from '@/components/BidPanel';
 import Positions from '@/components/Positions';
 import WalletBalance from '@/components/Balance';
+import { ChartSidebar, ChartToolbar } from '@/components/chart';
 
 const BUTTONS = [
     {
@@ -37,8 +38,14 @@ export default function Page() {
     const { activePanel, handleActivePanel, handlePanelResize, isPanelVisible, setIsPanelVisible } = useActivePanel();
 
     const positionPanelRef = useRef<ImperativePanelHandle | null>(null);
-    const [positionPanelOpen, setPositionPanelOpen] = useState(false);
-    const [placeBidPanel, setPlaceBidPanel] = useState(true);
+    const [positionPanelOpen, setPositionPanelOpen] = useState<boolean>(false);
+    const [placeBidPanel, setPlaceBidPanel] = useState<boolean>(true);
+    const [chartFullScreen, setChartFullScreen] = useState<boolean>(false);
+
+    const handleChartMaximizeToggle = () => {
+        setChartFullScreen(!chartFullScreen);
+        setPlaceBidPanel(false);
+    };
 
     // manage position panel open/close state
     const handlePositionPanelOpen = (size: number) => {
@@ -48,6 +55,18 @@ export default function Page() {
             setPositionPanelOpen(false);
         }
     };
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && chartFullScreen) {
+                setChartFullScreen(false);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [chartFullScreen]);
+
     return (
         <div className="flex h-screen min-h-screen flex-col overflow-hidden bg-neutral-100">
             <header className="bg-white">
@@ -110,19 +129,30 @@ export default function Page() {
                         <ResizablePanelGroup direction="vertical" className="flex-1">
                             {/* Chart  */}
                             <ResizablePanel defaultSize={93} className="flex">
-                                <div className="flex min-w-0 flex-1 flex-col">
-                                    <div className="flex h-10 shrink-0 items-center justify-between rounded-tl-sm bg-white px-4 text-center">
-                                        <div>TOPBAR</div>
-                                        <Button
-                                            onClick={() => setPlaceBidPanel(!placeBidPanel)}
-                                            variant={'outline'}
-                                            className="h-7 w-7 cursor-pointer rounded-sm"
-                                        >
-                                            {placeBidPanel ? <ChevronRight /> : <ChevronLeft />}
-                                        </Button>
+                                <div
+                                    className={cn(
+                                        'flex flex-col bg-neutral-100',
+                                        chartFullScreen ? 'fixed inset-0 z-50' : 'min-w-0 flex-1'
+                                    )}
+                                >
+                                    <div className="flex h-10 shrink-0 items-center justify-between rounded-tl-sm bg-white px-2 text-center">
+                                        <div>
+                                            <ChartToolbar onFullscreen={handleChartMaximizeToggle} />
+                                        </div>
+                                        {!chartFullScreen && (
+                                            <Button
+                                                onClick={() => setPlaceBidPanel(!placeBidPanel)}
+                                                variant={'outline'}
+                                                className="h-7 w-7 cursor-pointer rounded-sm"
+                                            >
+                                                {placeBidPanel ? <ChevronRight /> : <ChevronLeft />}
+                                            </Button>
+                                        )}
                                     </div>
-                                    <div className="mt-1 flex h-full w-full">
-                                        <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">T</div>
+                                    <div className="mt-1 flex flex-1 overflow-hidden">
+                                        <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">
+                                            <ChartSidebar />
+                                        </div>
                                         <Chart />
                                     </div>
                                 </div>

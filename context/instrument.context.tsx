@@ -20,6 +20,7 @@ export interface InstrumentContextType {
     error: string;
     handleChangeSymbol: (symbol: string) => void;
     timeFrame: number;
+    updateTimeFrame: (timeFrame: number) => void;
 }
 
 interface InstrumentProviderProp {
@@ -67,6 +68,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
     const [error, setError] = useState<string>('');
 
     const fetchCandles = useCallback(async () => {
+        setIsLoading(true);
         try {
             const candles = await fetchHistoryCandles(selectedSymbol, timeFrame, from, count);
             setCandles(candles);
@@ -97,6 +99,11 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         setLocalStorage('selected-symbol', symbol);
     };
 
+    const updateTimeFrame = (timeFrame: number): void => {
+        setTimeFrame(timeFrame);
+        setLocalStorage('timeframe', timeFrame);
+    };
+
     useEffect(() => {
         setLocalStorage('selected-symbol', selectedSymbol);
     }, [selectedSymbol]);
@@ -110,7 +117,7 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         isLoading,
         error,
         timeFrame,
-        setTimeFrame,
+        updateTimeFrame,
         handleChangeSymbol,
     };
 
