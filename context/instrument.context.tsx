@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { InstrumentContext } from '@/hooks/useInstrument';
 import { Candle, PricesProp } from '@/types';
-import { setLocalStorage } from '@/lib/localStorage';
+import { getLocalStorage, setLocalStorage } from '@/lib/localStorage';
 import { normalizeSymbol } from '@/lib/helper';
 
 export interface InstrumentContextType {
@@ -57,20 +57,30 @@ export async function fetchHistoryCandles(
     }
 }
 
+const FROM = Number.MAX_SAFE_INTEGER;
+const COUNT = -300;
+
 export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children }) => {
-    const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USD');
+    const [selectedSymbol, setSelectedSymbol] = useState<string>(() => {
+        const currSelectedSymbol: string | null = getLocalStorage('selected-symbol');
+        if (currSelectedSymbol) return currSelectedSymbol;
+        const favoriteSymbols = getLocalStorage<string[]>('fav-instruments');
+        return favoriteSymbols?.length ? favoriteSymbols[0] : 'BTC/USD';
+    });
     const [selectedSymbolPrice, setSelectedSymbolPrice] = useState<PricesProp | undefined>();
     const [candles, setCandles] = useState<Candle[]>([]);
-    const [from] = useState<number>(Number.MAX_SAFE_INTEGER);
-    const [timeFrame, setTimeFrame] = useState(5);
-    const [count] = useState(-300);
+    const [timeFrame, setTimeFrame] = useState(() => {
+        const currTimeFrame: string | null = getLocalStorage('timeframe');
+        const tf = Number(currTimeFrame);
+        return currTimeFrame !== null && !isNaN(tf) ? tf : 5;
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
     const fetchCandles = useCallback(async () => {
         setIsLoading(true);
         try {
-            const candles = await fetchHistoryCandles(selectedSymbol, timeFrame, from, count);
+            const candles = await fetchHistoryCandles(selectedSymbol, timeFrame, FROM, COUNT);
             setCandles(candles);
 
             if (candles && candles.length > 0) {
@@ -88,15 +98,14 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         } finally {
             setIsLoading(false);
         }
-    }, [count, from, selectedSymbol, timeFrame]);
+    }, [selectedSymbol, timeFrame]);
 
     useEffect(() => {
         fetchCandles();
-    }, [fetchCandles, selectedSymbol]);
+    }, [fetchCandles]);
 
     const handleChangeSymbol = (symbol: string) => {
         setSelectedSymbol(symbol);
-        setLocalStorage('selected-symbol', symbol);
     };
 
     const updateTimeFrame = (timeFrame: number): void => {
