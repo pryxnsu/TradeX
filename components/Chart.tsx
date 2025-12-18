@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { LogicalRange, Time } from 'lightweight-charts';
+import { cn } from '@/lib/utils';
 import {
     IChartApi,
     ISeriesApi,
@@ -15,8 +16,6 @@ import { useSocket } from '@/hooks/useSocket';
 import { IncomingInsSocketMsgProp } from '@/context/socket.context';
 import { Spinner } from './ui/spinner';
 import { fetchHistoryCandles } from '@/context/instrument.context';
-import { ArrowRight, ChevronLeft } from 'lucide-react';
-import { Button } from './ui/button';
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -249,8 +248,11 @@ export default function Chart() {
     return (
         <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
             <div className="relative ml-1 flex-1 overflow-hidden rounded-sm">
-                <div ref={containerRef} className="h-full w-full" />
-                {isLoading && (
+                <div
+                    ref={containerRef}
+                    className={cn('h-full w-full', candlesRef.current && isLoading && 'opacity-60')}
+                />
+                {!candlesRef.current && isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white">
                         <Spinner />
                     </div>
