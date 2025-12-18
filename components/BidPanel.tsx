@@ -203,7 +203,17 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
         } finally {
             setIsOrderPlacing(false);
         }
-    }, [selectedSymbolPrice, side, takeProfit, stopLoss, volume, selectedSymbol, placeOrder]);
+    }, [
+        selectedSymbolPrice,
+        side,
+        takeProfit,
+        stopLoss,
+        setIsOrderPlacing,
+        setError,
+        wallet?.id,
+        selectedSymbol,
+        volume,
+    ]);
 
     if (!selectedSymbolPrice?.buy || !selectedSymbolPrice?.sell) {
         return (

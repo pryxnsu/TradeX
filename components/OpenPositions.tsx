@@ -83,7 +83,7 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
                 return prevPos;
             }
         });
-    }, [incomingInsSocketMsg]);
+    }, [incomingInsSocketMsg, setOpenPositions, setWallet]);
 
     // update open positions -> adding new opened positon
     useEffect(() => {
@@ -97,7 +97,7 @@ export default function OpenPositions({ activeTab }: { activeTab: string }) {
         for (const incPositionMsg of incomingPositionsSocketMsg) {
             handlePositionEvent(incPositionMsg);
         }
-    }, [incomingPositionsSocketMsg]);
+    }, [handlePositionEvent, incomingPositionsSocketMsg]);
 
     if (openPositions.length === 0) {
         return (

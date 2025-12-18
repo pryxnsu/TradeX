@@ -152,7 +152,7 @@ export default function Chart() {
         return () => {
             chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
         };
-    }, [candles.length]);
+    }, [candles, candles.length, selectedSymbol, setCandles, timeFrame]);
 
     useEffect(() => {
         if (seriesRef.current && candles.length > 0) {

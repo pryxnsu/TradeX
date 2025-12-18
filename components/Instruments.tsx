@@ -72,7 +72,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
             }
         };
         fetchFavoritesInstruments();
-    }, []);
+    }, [selectedSymbol, setSelectedSymbolPrice]);
 
     // update prices of instrument sent by ws server
     const { incomingInsSocketMsg } = useSocket();
