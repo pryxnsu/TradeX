@@ -250,9 +250,9 @@ export default function Chart() {
             <div className="relative ml-1 flex-1 overflow-hidden rounded-sm">
                 <div
                     ref={containerRef}
-                    className={cn('h-full w-full', candlesRef.current && isLoading && 'opacity-60')}
+                    className={cn('h-full w-full', candles.length > 0 && isLoading && 'opacity-60')}
                 />
-                {!candlesRef.current && isLoading && (
+                {candles.length === 0 && isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white">
                         <Spinner />
                     </div>
