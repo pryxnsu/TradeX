@@ -43,6 +43,9 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
     const baseReconnectDelay = 1000;
     const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    // connect func. ref
+    const connectRef = useRef<() => void>(() => {});
+
     // send message to ws server
     const send = useCallback((msg: SocketMessageType) => {
         try {
@@ -78,7 +81,27 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
         [send]
     );
 
-    const favInstrumentsOfUser: string[] | null = getLocalStorage('fav-instruments');
+    const reconnect = () => {
+        if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+            setConnectionStatus('error');
+            setConnectionError('Failed to connect with server! Please try again later');
+            console.error('[Socket] Max reconnection attempts reached');
+            return;
+        }
+
+        const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttemptsRef.current), 30000);
+
+        reconnectAttemptsRef.current += 1;
+        setConnectionStatus('reconnecting');
+
+        console.log(
+            `[Socket] Reconnecting in ${delay}ms... (Attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
+        );
+
+        socketRef.current = null;
+
+        setTimeout(() => connectRef?.current?.(), delay);
+    };
 
     const connect = useCallback(() => {
         if (socketRef.current) return;
@@ -116,6 +139,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
                 setConnectionError(null);
                 console.log('Socket: Connected');
 
+                const favInstrumentsOfUser: string[] | null = getLocalStorage('fav-instruments');
                 if (favInstrumentsOfUser) {
                     // send event of subscribe favorite symbols
                     subscribeUnsubscribe('subscribe', 'instruments', favInstrumentsOfUser);
@@ -216,7 +240,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
 
                 switch (parsedData.event) {
                     case 'subscribe': {
-                        console.log(`Socket: Subcribed to: ${favInstrumentsOfUser}`);
+                        console.log('Socket: Subscribed successfully');
                         break;
                     }
 
@@ -240,10 +264,15 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
             setConnectionStatus('error');
             setConnectionError('Something went wrong while connecting...');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        connect();
+        connectRef.current = connect;
+    }, [connect]);
+
+    useEffect(() => {
+        connectRef.current?.();
 
         return () => {
             if (connectionTimeoutRef.current) {
@@ -252,6 +281,7 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
             }
 
             if (socketRef.current) {
+                const favInstrumentsOfUser: string[] | null = getLocalStorage('fav-instruments');
                 if (favInstrumentsOfUser) {
                     subscribeUnsubscribe('unsubscribe', 'instruments', favInstrumentsOfUser);
                 }
@@ -263,28 +293,6 @@ export const SocketProvider: React.FC<SocketProviderProp> = ({ children }) => {
             }
         };
     }, [subscribeUnsubscribe]);
-
-    function reconnect() {
-        if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-            setConnectionStatus('error');
-            setConnectionError('Failed to connect with server! Please try again later');
-            console.error('[Socket] Max reconnection attempts reached');
-            return;
-        }
-
-        const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttemptsRef.current), 30000);
-
-        reconnectAttemptsRef.current += 1;
-        setConnectionStatus('reconnecting');
-
-        console.log(
-            `[Socket] Reconnecting in ${delay}ms... (Attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
-        );
-
-        socketRef.current = null;
-
-        setTimeout(() => connect(), delay);
-    }
 
     useEffect(() => {
         const intervalId = setInterval(() => {
