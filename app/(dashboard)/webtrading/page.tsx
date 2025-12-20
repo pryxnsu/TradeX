@@ -107,11 +107,11 @@ export default function Page() {
                                 </Activity>
 
                                 <Activity mode={activePanel === 'calender' ? 'visible' : 'hidden'}>
-                                    <p>Calender</p>
+                                    <p>Calender </p>
                                 </Activity>
 
                                 <Activity mode={activePanel === 'settings' ? 'visible' : 'hidden'}>
-                                    <p>Settings</p>
+                                    <p>Settings </p>
                                 </Activity>
                             </ResizablePanel>
 
@@ -125,60 +125,68 @@ export default function Page() {
                         defaultSize={isPanelVisible && activePanel ? 100 - (leftPanelSize || 25) : 100}
                         className="flex h-full flex-1 flex-col rounded-tl-sm bg-neutral-100"
                     >
-                        <ResizablePanelGroup direction="vertical" className="flex-1">
-                            {/* Chart  */}
-                            <ResizablePanel defaultSize={93} className="flex">
-                                <div
-                                    className={cn(
-                                        'flex flex-col bg-neutral-100',
-                                        chartFullScreen ? 'fixed inset-0 z-50' : 'min-w-0 flex-1'
-                                    )}
-                                >
-                                    <div className="flex h-10 shrink-0 items-center justify-between rounded-tl-sm bg-white px-2 text-center">
-                                        <div>
-                                            <ChartToolbar onFullscreen={handleChartMaximizeToggle} />
-                                        </div>
-                                        {!chartFullScreen && (
-                                            <Button
-                                                onClick={() => setPlaceBidPanel(!placeBidPanel)}
-                                                variant={'outline'}
-                                                className="h-7 w-7 cursor-pointer rounded-sm"
-                                            >
-                                                {placeBidPanel ? <ChevronRight /> : <ChevronLeft />}
-                                            </Button>
+                        <div className="flex h-full">
+                            <ResizablePanelGroup direction="vertical" className="flex-1">
+                                {/* Chart  */}
+                                <ResizablePanel defaultSize={93} className="flex">
+                                    <div
+                                        className={cn(
+                                            'flex flex-col bg-neutral-100',
+                                            chartFullScreen ? 'fixed inset-0 z-50' : 'min-w-0 flex-1'
                                         )}
-                                    </div>
-                                    <div className="mt-1 flex flex-1 overflow-hidden">
-                                        <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">
-                                            <ChartSidebar />
+                                    >
+                                        <div className="flex h-10 shrink-0 items-center justify-between rounded-tl-sm bg-white px-2 text-center">
+                                            <div>
+                                                <ChartToolbar onFullscreen={handleChartMaximizeToggle} />
+                                            </div>
+                                            {!chartFullScreen && (
+                                                <Button
+                                                    onClick={() => setPlaceBidPanel(!placeBidPanel)}
+                                                    variant={'outline'}
+                                                    className="h-7 w-7 cursor-pointer rounded-sm"
+                                                >
+                                                    {placeBidPanel ? <ChevronRight /> : <ChevronLeft />}
+                                                </Button>
+                                            )}
                                         </div>
-                                        <Chart />
+                                        <div className="mt-1 flex flex-1 overflow-hidden">
+                                            <div className="h-full min-w-10 shrink-0 rounded-r-sm bg-white">
+                                                <ChartSidebar />
+                                            </div>
+                                            <Chart />
+                                        </div>
                                     </div>
+                                </ResizablePanel>
+
+                                {/* resize handle  */}
+                                <ResizableHandle className="bg-transparent" />
+
+                                {/* Positions  */}
+                                <ResizablePanel
+                                    ref={positionPanelRef}
+                                    defaultSize={
+                                        positionPanelOpen
+                                            ? OPENED_SIZE_OF_POSITION_PANEL
+                                            : DEFAULT_SIZE_OF_POSITION_PANEL
+                                    }
+                                    minSize={DEFAULT_SIZE_OF_POSITION_PANEL}
+                                    onResize={handlePositionPanelOpen}
+                                    className="mt-1 flex h-fit min-h-12 w-full flex-col rounded-sm bg-white"
+                                >
+                                    <Positions
+                                        positionPanelOpen={positionPanelOpen}
+                                        positionPanelRef={positionPanelRef}
+                                    />
+                                </ResizablePanel>
+                            </ResizablePanelGroup>
+
+                            {/* Place bid  */}
+                            <Activity mode={placeBidPanel ? 'visible' : 'hidden'}>
+                                <div className="ml-1 w-[280px] max-w-[280px] min-w-[280px] rounded-l-sm bg-white">
+                                    <BidPanel onClose={() => setPlaceBidPanel(false)} />
                                 </div>
-                                {/* Place bid  */}
-                                <Activity mode={placeBidPanel ? 'visible' : 'hidden'}>
-                                    <div className="ml-1 w-[280px] max-w-[280px] min-w-[280px] rounded-l-sm bg-white">
-                                        <BidPanel onClose={() => setPlaceBidPanel(false)} />
-                                    </div>
-                                </Activity>
-                            </ResizablePanel>
-
-                            {/* resize handle  */}
-                            <ResizableHandle className="bg-transparent" />
-
-                            {/* Positions  */}
-                            <ResizablePanel
-                                ref={positionPanelRef}
-                                defaultSize={
-                                    positionPanelOpen ? OPENED_SIZE_OF_POSITION_PANEL : DEFAULT_SIZE_OF_POSITION_PANEL
-                                }
-                                minSize={DEFAULT_SIZE_OF_POSITION_PANEL}
-                                onResize={handlePositionPanelOpen}
-                                className="mt-1 flex h-full w-full flex-col rounded-sm bg-white"
-                            >
-                                <Positions positionPanelOpen={positionPanelOpen} positionPanelRef={positionPanelRef} />
-                            </ResizablePanel>
-                        </ResizablePanelGroup>
+                            </Activity>
+                        </div>
 
                         {/* wallet balance */}
                         <WalletBalance />
