@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { LogicalRange, Time } from 'lightweight-charts';
-import { cn } from '@/lib/utils';
 import {
     IChartApi,
     ISeriesApi,
@@ -248,13 +247,10 @@ export default function Chart() {
     return (
         <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
             <div className="relative ml-1 flex-1 overflow-hidden rounded-sm">
-                <div
-                    ref={containerRef}
-                    className={cn('h-full w-full', candles.length > 0 && isLoading && 'opacity-60')}
-                />
-                {candles.length === 0 && isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white">
-                        <Spinner />
+                <div ref={containerRef} className="h-full w-full" />
+                {isLoading && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white">
+                        <Spinner className="size-6" />
                     </div>
                 )}
             </div>
