@@ -35,25 +35,24 @@ export const DEFAULT_SIZE_OF_POSITION_PANEL = 7;
 export const OPENED_SIZE_OF_POSITION_PANEL = 35;
 
 export default function Page() {
-    const { activePanel, handleActivePanel, handlePanelResize, isPanelVisible, setIsPanelVisible } = useActivePanel();
+    const {
+        activePanel,
+        handleActivePanel,
+        handlePanelResize,
+        isPanelVisible,
+        setIsPanelVisible,
+        leftPanelSize,
+        positionPanelOpen,
+        handlePositionPanelOpen,
+    } = useActivePanel();
 
     const positionPanelRef = useRef<ImperativePanelHandle | null>(null);
-    const [positionPanelOpen, setPositionPanelOpen] = useState<boolean>(false);
     const [placeBidPanel, setPlaceBidPanel] = useState<boolean>(true);
     const [chartFullScreen, setChartFullScreen] = useState<boolean>(false);
 
     const handleChartMaximizeToggle = () => {
         setChartFullScreen(!chartFullScreen);
         setPlaceBidPanel(false);
-    };
-
-    // manage position panel open/close state
-    const handlePositionPanelOpen = (size: number) => {
-        if (size > DEFAULT_SIZE_OF_POSITION_PANEL) {
-            setPositionPanelOpen(true);
-        } else {
-            setPositionPanelOpen(false);
-        }
     };
 
     useEffect(() => {
@@ -99,7 +98,7 @@ export default function Page() {
                     <Activity mode={activePanel && isPanelVisible ? 'visible' : 'hidden'}>
                         <>
                             <ResizablePanel
-                                defaultSize={25}
+                                defaultSize={leftPanelSize || 25}
                                 onResize={handlePanelResize}
                                 className="mr-1 max-w-1/2 rounded-tl-sm rounded-tr-sm bg-white"
                             >
@@ -123,7 +122,7 @@ export default function Page() {
 
                     {/* right panel  */}
                     <ResizablePanel
-                        defaultSize={75}
+                        defaultSize={isPanelVisible && activePanel ? 100 - (leftPanelSize || 25) : 100}
                         className="flex h-full flex-1 flex-col rounded-tl-sm bg-neutral-100"
                     >
                         <ResizablePanelGroup direction="vertical" className="flex-1">
@@ -170,7 +169,9 @@ export default function Page() {
                             {/* Positions  */}
                             <ResizablePanel
                                 ref={positionPanelRef}
-                                defaultSize={DEFAULT_SIZE_OF_POSITION_PANEL}
+                                defaultSize={
+                                    positionPanelOpen ? OPENED_SIZE_OF_POSITION_PANEL : DEFAULT_SIZE_OF_POSITION_PANEL
+                                }
                                 minSize={DEFAULT_SIZE_OF_POSITION_PANEL}
                                 onResize={handlePositionPanelOpen}
                                 className="mt-1 flex h-full w-full flex-col rounded-sm bg-white"
