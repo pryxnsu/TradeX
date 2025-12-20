@@ -32,12 +32,21 @@ export const UserProvider: React.FC<UserProviderProp> = ({ children }) => {
                     },
                     credentials: 'include',
                 });
-                if (response.ok) {
-                    const data = await response.json();
-                    setUser(data.user);
-                    setIsAuthenticated(true);
-                    setLocalStorage('user', data.user);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        setIsLoading(false);
+                        setUser(null);
+                        setIsAuthenticated(false);
+                        return;
+                    }
+                    throw new Error(`Request failed with status ${response.status}`);
                 }
+
+                const data = await response.json();
+                setUser(data.user);
+                setIsAuthenticated(true);
+                setLocalStorage('user', data.user);
             } catch (err: unknown) {
                 const errorMessage = err instanceof Error ? err.message : 'Something went wrong while fetching user';
                 setError(errorMessage);
