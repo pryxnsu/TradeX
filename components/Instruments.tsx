@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { MoreVertical, Search, Star, X } from 'lucide-react';
+import { MoreVertical, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InstrumentProp, PanelTypes } from '@/types';
 import { Input } from './ui/input';
@@ -255,8 +255,8 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
         return <div className="p-4">{error}</div>;
     }
     return (
-        <div className="mx-auto h-full p-3">
-            <div className="mb-6 flex items-center justify-between">
+        <div className="mx-auto flex h-full flex-col py-3">
+            <div className="mb-6 flex items-center justify-between px-3">
                 <h1 className="text-sm text-black">INSTRUMENTS</h1>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="text-foreground">
@@ -268,7 +268,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                 </div>
             </div>
 
-            <div className="relative mb-6 flex gap-4">
+            <div className="relative mb-6 flex gap-4 px-3">
                 <div className="border-input bg-background focus-within:ring-ring relative flex flex-1 items-center rounded-md border focus-within:ring-2">
                     <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform" />
                     <Input
@@ -295,7 +295,7 @@ export default function Instruments({ onClose }: { onClose: (type: PanelTypes) =
                 </div>
             </div>
 
-            <div className="bg-card h-full w-full overflow-hidden rounded-lg">
+            <div className="bg-card h-full flex-1 overflow-x-scroll overflow-y-hidden rounded-lg">
                 {isLoading ? (
                     <div className="w-full">
                         <Spinner className="mx-auto size-6" />

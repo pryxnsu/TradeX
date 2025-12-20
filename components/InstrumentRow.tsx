@@ -34,17 +34,22 @@ export function InstrumentRow({
     // one day change
     const oneDayChange = isPositive ? '+' + instrument.change : instrument.change;
     return (
-        <TableRow className="select-none">
-            <TableCell onClick={() => handleChangeSymbol(instrument.symbol)} className="flex items-center gap-2">
-                {isSearched === false && (
-                    <span className="cursor-pointer">
-                        <GripVertical size={16} />
-                    </span>
-                )}
-                <Instrument symbol={instrument.symbol} iconSize={25} />
+        <TableRow className="border-b select-none">
+            <TableCell
+                onClick={() => handleChangeSymbol(instrument.symbol)}
+                className="sticky left-0 z-10 border-r bg-white px-3 shadow-[1px_0_0_0_#e5e7eb]"
+            >
+                <div className="flex items-center gap-2">
+                    {isSearched === false && (
+                        <span className="cursor-pointer">
+                            <GripVertical size={16} />
+                        </span>
+                    )}
+                    <Instrument symbol={instrument.symbol} iconSize={25} />
+                </div>
             </TableCell>
 
-            <TableCell className="text-center">
+            <TableCell className="z-5 text-center">
                 <div
                     className={cn(
                         'inline-flex rounded-xs p-[2px]',
@@ -55,7 +60,7 @@ export function InstrumentRow({
                 </div>
             </TableCell>
 
-            <TableCell>
+            <TableCell className="">
                 <div
                     className={cn(
                         'mx-1 w-fit min-w-25 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200',
@@ -66,7 +71,7 @@ export function InstrumentRow({
                 </div>
             </TableCell>
 
-            <TableCell>
+            <TableCell className="">
                 <div
                     className={cn(
                         'mx-1 w-fit min-w-25 rounded px-2 py-1 font-mono text-xs font-semibold transition-colors duration-200',
@@ -77,7 +82,7 @@ export function InstrumentRow({
                 </div>
             </TableCell>
 
-            <TableCell>
+            <TableCell className="">
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                         {isPositive ? (
@@ -105,7 +110,7 @@ export function InstrumentRow({
                 </div>
             </TableCell>
 
-            <TableCell className="font-mono text-xs">{instrument?.pl ?? '-'}</TableCell>
+            <TableCell className="px-3 font-mono text-xs">{instrument?.pl ?? '-'}</TableCell>
 
             <TableCell className="text-right">
                 <Button

@@ -1,4 +1,4 @@
-import { Search, Star } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InstrumentRow } from './InstrumentRow';
 import { InstrumentProp } from '@/types';
@@ -25,18 +25,18 @@ export default function InstrumentsTable({
                 <Table className="flex-1">
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[200px]">Symbol</TableHead>
+                            <TableHead className="sticky left-0 z-20 w-[200px] bg-white px-3 shadow-[1px_0_0_0_#e5e7eb]">
+                                Symbol
+                            </TableHead>
                             <TableHead className="min-w-25 p-1 px-3 text-center">Signal</TableHead>
                             <TableHead className="min-w-25 p-1 px-3">Bid</TableHead>
                             <TableHead className="min-w-25 p-1 px-3">Ask</TableHead>
                             <TableHead className="w-[150px]">1D change</TableHead>
                             <TableHead className="w-[120px]">P/L, USD</TableHead>
-                            <TableHead className="w-[60px]">
-                                <Star size={15} className="w-full text-center" />
-                            </TableHead>
+                            <TableHead className="w-[60px]"></TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="overflow-x-hidden">
                         {isLoading ? (
                             <TableRow>
                                 <TableCell colSpan={7}>
