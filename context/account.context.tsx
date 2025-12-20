@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AccountContext } from '@/hooks/useAccount';
 import { setLocalStorage } from '@/lib/localStorage';
 import { IncomingSocketEventType, IncomingSocketPositionsType, OpenPositionProp, Wallet } from '@/types';
@@ -128,90 +128,102 @@ export const AccountProvider: React.FC<AccountProviderProp> = ({ children }) => 
 
     const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
 
-    const addPosition = (p: IncomingSocketPositionsType) => {
-        setOpenPositions(prev => {
-            try {
-                if (!p.positionId || !p.instrument || p.openPrice === undefined || p.volume === undefined) {
-                    console.warn('Invalid position data:', p);
-                    return prev;
-                }
-
-                const positionExists = prev.some(pe => pe.position === p.positionId);
-                if (positionExists) {
-                    return prev;
-                }
-
-                const upPosition: OpenPositionProp = {
-                    symbol: p.instrument,
-                    type: p.type,
-                    volume: p.volume,
-                    openPrice: p.openPrice,
-                    tp: p.tp,
-                    sl: p.sl,
-                    position: p.positionId,
-                    currentPrice: p.price,
-                    openTime: new Date(p.openTime),
-                    swap: p.swap || 0,
-                    pnl: p.profit || 0,
-                };
-
-                return [upPosition, ...prev];
-            } catch (err: unknown) {
-                console.error('Error processing new positions:', err);
-                return prev;
-            }
-        });
-    };
-
-    const updateOpenPosition = (p: IncomingSocketPositionsType) => {
-        setOpenPositions(prev => {
-            try {
-                if (!p.positionId) return prev;
-
-                return prev.flatMap(pos => {
-                    if (pos.position !== p.positionId) return pos;
-
-                    if (p.volume <= 0) {
-                        return [];
+    const addPosition = useCallback(
+        (p: IncomingSocketPositionsType) => {
+            setOpenPositions(prev => {
+                try {
+                    if (!p.positionId || !p.instrument || p.openPrice === undefined || p.volume === undefined) {
+                        console.warn('Invalid position data:', p);
+                        return prev;
                     }
 
-                    return {
-                        ...pos,
+                    const positionExists = prev.some(pe => pe.position === p.positionId);
+                    if (positionExists) {
+                        return prev;
+                    }
+
+                    const upPosition: OpenPositionProp = {
+                        symbol: p.instrument,
+                        type: p.type,
                         volume: p.volume,
-                        pnl: p.profit ?? pos.pnl,
-                        currentPrice: p.price ?? pos.currentPrice,
-                        sl: p.sl ?? pos.sl,
-                        tp: p.tp ?? pos.tp,
+                        openPrice: p.openPrice,
+                        tp: p.tp,
+                        sl: p.sl,
+                        position: p.positionId,
+                        currentPrice: p.price,
+                        openTime: new Date(p.openTime),
+                        swap: p.swap || 0,
+                        pnl: p.profit || 0,
                     };
-                });
-            } catch (err: unknown) {
-                console.error('[Error] failed to update position', err);
-                return prev;
-            }
-        });
-    };
 
-    const closeFullPosition = (p: IncomingSocketPositionsType) => {
-        setOpenPositions(prev => {
-            return prev.filter(item => item.position !== p.positionId);
-        });
-    };
+                    return [upPosition, ...prev];
+                } catch (err: unknown) {
+                    console.error('Error processing new positions:', err);
+                    return prev;
+                }
+            });
+        },
+        [setOpenPositions]
+    );
 
-    const handlePositionEvent = (msg: IncomingSocketEventType) => {
-        switch (msg.t) {
-            case 'open':
-                addPosition(msg.d as IncomingSocketPositionsType);
-                break;
-            case 'upd':
-                updateOpenPosition(msg.d as IncomingSocketPositionsType);
-                break;
-            case 'close': {
-                closeFullPosition(msg.d as IncomingSocketPositionsType);
+    const updateOpenPosition = useCallback(
+        (p: IncomingSocketPositionsType) => {
+            setOpenPositions(prev => {
+                try {
+                    if (!p.positionId) return prev;
+
+                    return prev.flatMap(pos => {
+                        if (pos.position !== p.positionId) return pos;
+
+                        if (p.volume <= 0) {
+                            return [];
+                        }
+
+                        return {
+                            ...pos,
+                            volume: p.volume,
+                            pnl: p.profit ?? pos.pnl,
+                            currentPrice: p.price ?? pos.currentPrice,
+                            sl: p.sl ?? pos.sl,
+                            tp: p.tp ?? pos.tp,
+                        };
+                    });
+                } catch (err: unknown) {
+                    console.error('[Error] failed to update position', err);
+                    return prev;
+                }
+            });
+        },
+        [setOpenPositions]
+    );
+
+    const closeFullPosition = useCallback(
+        (p: IncomingSocketPositionsType) => {
+            setOpenPositions(prev => {
+                return prev.filter(item => item.position !== p.positionId);
+            });
+        },
+        [setOpenPositions]
+    );
+
+    const handlePositionEvent = useCallback(
+        (msg: IncomingSocketEventType) => {
+            switch (msg.t) {
+                case 'open':
+                    addPosition(msg.d as IncomingSocketPositionsType);
+                    break;
+                case 'upd':
+                    updateOpenPosition(msg.d as IncomingSocketPositionsType);
+                    break;
+                case 'close':
+                    closeFullPosition(msg.d as IncomingSocketPositionsType);
+                    break;
+                default:
+                    break;
             }
-            default:
-                break;
-        }
-    };
+        },
+        [addPosition, updateOpenPosition, closeFullPosition]
+    );
 
     const handleClosePosition = async (positionId: string, price: number, volume: number, closeById: number) => {
         try {
