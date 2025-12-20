@@ -4,9 +4,9 @@ export function proxy(request: NextRequest) {
     const token = request.cookies.get('auth.token.0')?.value;
     const { pathname } = request.nextUrl;
 
-    if (token && pathname.startsWith('/login')) {
-        return NextResponse.redirect(new URL('/webtrading', request.url));
-    }
+    // if (token && pathname.startsWith('/login')) {
+    //     return NextResponse.redirect(new URL('/webtrading', request.url));
+    // }
 
     const protectedRoutes = ['/webtrading'];
 
