@@ -38,25 +38,27 @@ export default function Position({
         <div className="bg-card flex h-full flex-col overflow-hidden rounded-md pb-2">
             <div className="flex-1 overflow-auto">
                 <Table>
-                    <TableHeader className="sticky top-0 z-10">
+                    <TableHeader className="sticky top-0 z-10 bg-white">
                         <TableRow className="border-border">
-                            <TableHead>Symbol</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Volume, lot</TableHead>
-                            <TableHead>Open Price</TableHead>
+                            <TableHead className="w-[120px] px-3">Symbol</TableHead>
+                            <TableHead className="w-[70px] px-3">Type</TableHead>
+                            <TableHead className="w-[90px] px-3 text-right">Volume, lot</TableHead>
+                            <TableHead className="w-[100px] px-3 text-right">Open Price</TableHead>
                             {activeTab === 'closed' ? (
-                                <TableHead>Close Price</TableHead>
+                                <TableHead className="w-[100px] px-3 text-right">Close Price</TableHead>
                             ) : (
-                                <TableHead>Current Price</TableHead>
+                                <TableHead className="w-[110px] px-3 text-right">Current Price</TableHead>
                             )}
-                            <TableHead>T/P</TableHead>
-                            <TableHead>S/L</TableHead>
-                            <TableHead>Position</TableHead>
-                            <TableHead>Open Time</TableHead>
-                            {activeTab === 'closed' && <TableHead>Close Time</TableHead>}
-                            <TableHead>Swap, USD</TableHead>
-                            <TableHead>P/L, USD</TableHead>
-                            {activeTab === 'open' && <TableHead>Actions</TableHead>}
+                            <TableHead className="w-[60px] px-3 text-center">T/P</TableHead>
+                            <TableHead className="w-[60px] px-3 text-center">S/L</TableHead>
+                            <TableHead className="w-[160px] px-3">Position</TableHead>
+                            <TableHead className="w-[170px] px-3">Open Time</TableHead>
+                            {activeTab === 'closed' && <TableHead className="w-[170px] px-3">Close Time</TableHead>}
+                            <TableHead className="w-[80px] px-3 text-right">Swap, USD</TableHead>
+                            <TableHead className="w-[90px] px-3 text-right">P/L, USD</TableHead>
+                            {activeTab === 'open' && (
+                                <TableHead className="w-[80px] px-3 text-center">Actions</TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -65,32 +67,34 @@ export default function Position({
                                 key={'dealId' in pos ? pos.dealId : pos.position}
                                 className="border-border hover:bg-muted/30"
                             >
-                                <TableCell className="text-foreground py-[3px] font-semibold">
+                                <TableCell className="text-foreground py-[3px] pr-3 pl-1 font-semibold">
                                     <div className="flex items-center gap-2">
                                         <Instrument symbol={pos.symbol} iconSize={24} />
                                     </div>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="px-3">
                                     <div className={cn(pos.type === 0 ? 'text-blue-500' : 'text-red-500')}>
                                         ● {pos.type == 0 ? 'Buy' : 'Sell'}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-foreground text-left">{pos.volume.toFixed(2)}</TableCell>
-                                <TableCell className="text-foreground text-left underline decoration-dashed">
+                                <TableCell className="text-foreground px-3 text-right">
+                                    {pos.volume.toFixed(2)}
+                                </TableCell>
+                                <TableCell className="text-foreground px-3 text-right underline decoration-dashed">
                                     {pos.openPrice.toLocaleString()}
                                 </TableCell>
                                 {'closePrice' in pos ? (
-                                    <TableCell className="text-foreground text-left underline decoration-dashed">
+                                    <TableCell className="text-foreground px-3 text-right underline decoration-dashed">
                                         {pos.closePrice?.toLocaleString()}
                                     </TableCell>
                                 ) : (
-                                    <TableCell className="text-foreground text-left underline decoration-dashed">
+                                    <TableCell className="text-foreground px-3 text-right underline decoration-dashed">
                                         {pos.currentPrice.toLocaleString()}
                                     </TableCell>
                                 )}
                                 <TableCell
                                     className={cn(
-                                        'text-foreground px-1 text-center',
+                                        'text-foreground px-3 text-center',
                                         pos.tp > 0 && 'underline decoration-dashed'
                                     )}
                                 >
@@ -98,26 +102,29 @@ export default function Position({
                                 </TableCell>
                                 <TableCell
                                     className={cn(
-                                        'text-foreground px-1 text-center',
-                                        pos.tp > 0 && 'underline decoration-dashed'
+                                        'text-foreground px-3 text-center',
+                                        pos.sl > 0 && 'underline decoration-dashed'
                                     )}
                                 >
                                     {pos.sl > 0 ? pos.sl?.toFixed(2) : '-'}
                                 </TableCell>
-                                <TableCell className="text-foreground w-42 truncate px-1 font-mono text-sm">
-                                    <div className="max-w-42 truncate">{pos.position}</div>
+                                <TableCell className="text-foreground w-[160px] truncate px-3 font-mono text-sm">
+                                    <div className="max-w-[140px] truncate">{pos.position}</div>
                                 </TableCell>
-                                <TableCell className="text-foreground text-sm">{getDate(pos.openTime)}</TableCell>
+                                <TableCell className="text-foreground px-3 text-sm">{getDate(pos.openTime)}</TableCell>
                                 {'closeTime' in pos && pos.closeTime && (
-                                    <TableCell className="text-foreground px-1 text-sm">
+                                    <TableCell className="text-foreground px-3 text-sm">
                                         {getDate(pos.closeTime)}
                                     </TableCell>
                                 )}
-                                <TableCell className="text-foreground px-1 text-right">
+                                <TableCell className="text-foreground px-3 text-right">
                                     {pos.swap && pos?.swap > 0 ? pos.swap : '-'}
                                 </TableCell>
                                 <TableCell
-                                    className={`text-right font-semibold ${pos.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                                    className={cn(
+                                        'px-3 text-right font-semibold',
+                                        pos.pnl >= 0 ? 'text-green-600' : 'text-red-600'
+                                    )}
                                 >
                                     {pos.pnl > 0 && '+'}
                                     {pos?.pnl.toFixed(2)}
