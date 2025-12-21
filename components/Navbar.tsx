@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, LogOut, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import FavoriteInstruments from './FavoriteInstruments';
+import RecentlyOpenedInstruments from './RecentlyOpenedInstruments';
 import { useUser } from '@/hooks/useUser';
 import { useAccount } from '@/hooks/useAccount';
 import { toast } from 'sonner';
@@ -58,12 +58,12 @@ export default function Navbar() {
         );
     }
     return (
-        <div className="flex w-full items-center justify-between px-4 py-3">
+        <div className="flex h-16 w-full items-center justify-between px-4">
             <div className="flex items-center justify-between gap-6">
                 <h1 className="text-4xl font-semibold text-yellow-500">Exness</h1>
 
                 <div className="max-w-3xl">
-                    <FavoriteInstruments />
+                    <RecentlyOpenedInstruments />
                 </div>
             </div>
 
@@ -78,7 +78,7 @@ export default function Navbar() {
                                 <div className="flex items-center gap-2">
                                     <div
                                         className={cn(
-                                            'rounded-xs px-1 py-[2px] text-xs font-medium',
+                                            'rounded-xs px-1 py-0.5 text-xs font-medium',
                                             wallet?.type == 'real'
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-yellow-600 text-yellow-200'

@@ -21,6 +21,8 @@ export interface InstrumentContextType {
     handleChangeSymbol: (symbol: string) => void;
     timeFrame: number;
     updateTimeFrame: (timeFrame: number) => void;
+    openedInstruments: string[];
+    handleCloseInstrument: (symbol: string) => void;
 }
 
 interface InstrumentProviderProp {
@@ -59,6 +61,7 @@ export async function fetchHistoryCandles(
 
 const FROM = Number.MAX_SAFE_INTEGER;
 const COUNT = -300;
+const MAX_OPENED_INSTRUMENTS = 4;
 
 export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children }) => {
     const [selectedSymbol, setSelectedSymbol] = useState<string>(() => {
@@ -73,6 +76,10 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         const currTimeFrame: string | null = getLocalStorage('timeframe');
         const tf = Number(currTimeFrame);
         return currTimeFrame !== null && !isNaN(tf) ? tf : 5;
+    });
+    const [openedInstruments, setOpenedInstruments] = useState<string[]>(() => {
+        const savedOpenedInstruments: string[] | null = getLocalStorage('opened-instruments');
+        return savedOpenedInstruments?.length ? savedOpenedInstruments : [selectedSymbol];
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
@@ -104,8 +111,21 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         fetchCandles();
     }, [fetchCandles]);
 
+    // change symbol and update opened instruments
     const handleChangeSymbol = (symbol: string) => {
         setSelectedSymbol(symbol);
+
+        setOpenedInstruments(prev => {
+            if (prev.includes(symbol)) return prev;
+
+            const updated = [...prev, symbol];
+
+            if (updated.length > MAX_OPENED_INSTRUMENTS) {
+                return updated.slice(1);
+            }
+
+            return updated;
+        });
     };
 
     const updateTimeFrame = (timeFrame: number): void => {
@@ -113,9 +133,25 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         setLocalStorage('timeframe', timeFrame);
     };
 
+    // remove instrument from navbar favorites
+    const handleCloseInstrument = (symbol: string) => {
+        const updated = openedInstruments.filter(s => s !== symbol);
+        if (updated.length === 0) return;
+
+        setOpenedInstruments(updated);
+
+        if (symbol === selectedSymbol) {
+            setSelectedSymbol(updated[0]);
+        }
+    };
+
     useEffect(() => {
         setLocalStorage('selected-symbol', selectedSymbol);
     }, [selectedSymbol]);
+
+    useEffect(() => {
+        setLocalStorage('opened-instruments', openedInstruments);
+    }, [openedInstruments]);
 
     const value = {
         selectedSymbol,
@@ -128,6 +164,8 @@ export const InstrumentProvider: React.FC<InstrumentProviderProp> = ({ children 
         timeFrame,
         updateTimeFrame,
         handleChangeSymbol,
+        openedInstruments,
+        handleCloseInstrument,
     };
 
     return <InstrumentContext.Provider value={value}>{children}</InstrumentContext.Provider>;
