@@ -14,6 +14,9 @@ import { useBid } from '@/hooks/useBid';
 import { Spinner } from './ui/spinner';
 import { PricesProp, Side } from '@/types';
 
+const MIN_LOT_SIZE = 0.01;
+const MAX_LOT_SIZE = 100;
+
 function calculateTpandSl(side: Side, selectedSymbolPrice: PricesProp) {
     if (side === 'buy') {
         return {
@@ -29,7 +32,7 @@ function calculateTpandSl(side: Side, selectedSymbolPrice: PricesProp) {
 }
 
 function validateTpSl(side: Side, price: number, tp?: number, sl?: number): string | null {
-    if (tp !== undefined && tp !== 0) {
+    if (tp !== undefined && tp !== 0 && !isNaN(tp)) {
         if (side === 'buy' && tp <= price) {
             return 'Take Profit must be higher than current price for Buy orders';
         }
@@ -37,7 +40,7 @@ function validateTpSl(side: Side, price: number, tp?: number, sl?: number): stri
             return 'Take Profit must be lower than current price for Sell orders';
         }
     }
-    if (sl !== undefined && sl !== 0) {
+    if (sl !== undefined && sl !== 0 && !isNaN(sl)) {
         if (side === 'buy' && sl >= price) {
             return 'Stop Loss must be lower than current price for Buy orders';
         }
@@ -72,8 +75,8 @@ const placeOrder = async (data: {
             throw new Error('Invalid price');
         }
 
-        if (volume < 0.01) {
-            throw new Error('Minimum volume is 0.01 lots');
+        if (isNaN(volume) || volume < MIN_LOT_SIZE || volume > MAX_LOT_SIZE) {
+            throw new Error(`Volume must be between ${MIN_LOT_SIZE} and ${MAX_LOT_SIZE} lots`);
         }
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/accounts/${walletId}/orders`, {
@@ -102,6 +105,15 @@ const placeOrder = async (data: {
     }
 };
 
+const validateVolume = (volume: string | undefined) => {
+    if (!volume) return `${MIN_LOT_SIZE} - ${MAX_LOT_SIZE} lots`;
+    const numericValue = Number(volume);
+    if (isNaN(numericValue) || numericValue < MIN_LOT_SIZE || numericValue > MAX_LOT_SIZE) {
+        return `${MIN_LOT_SIZE} - ${MAX_LOT_SIZE} lots`;
+    }
+    return null;
+};
+
 export default function BidPanel({ onClose }: { onClose: () => void }) {
     const { selectedSymbol, selectedSymbolPrice } = useInstrument();
     const { wallet } = useAccount();
@@ -112,6 +124,8 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
         setOrderType,
         volume,
         setVolume,
+        volumeWarning,
+        setVolumeWarning,
         takeProfit,
         setTakeProfit,
         stopLoss,
@@ -125,26 +139,27 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
     } = useBid();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const target = e.target as HTMLInputElement;
-        const { name } = target;
-        const valueAsNumber = target.valueAsNumber;
-        const parsed = Number.isFinite(valueAsNumber) ? valueAsNumber : parseFloat(target.value);
-        const numericValue = Number.isFinite(parsed) ? parsed : 0;
+        const { name, value } = e.target;
+
+        // allow only numeric characters and single decimal point
+        if (!/^\d*\.?\d*$/.test(value) && value !== '') return;
 
         setError(null);
 
         if (name === 'volume') {
-            setVolume(Math.max(0.01, numericValue));
+            setVolume(value);
+            const warning = validateVolume(value);
+            setVolumeWarning(warning);
         } else if (name === 'takeProfit') {
-            setTakeProfit(numericValue || undefined);
+            setTakeProfit(value);
         } else if (name === 'stopLoss') {
-            setStopLoss(numericValue || undefined);
+            setStopLoss(value);
         }
     };
 
     const adjustVolume = (delta: number) => {
-        const newVolume = Number(Math.max(0.01, volume + delta).toFixed(2));
-        setVolume(newVolume);
+        const newVolume = Number(Math.min(MAX_LOT_SIZE, Math.max(MIN_LOT_SIZE, Number(volume) + delta)).toFixed(2));
+        setVolume(String(newVolume));
     };
 
     const adjustTakeProfit = (delta: number) => {
@@ -152,8 +167,8 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
         const basePrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
         const step = basePrice * 0.0001;
         const current = takeProfit || basePrice;
-        const newValue = Number((current + delta * step).toFixed(5));
-        setTakeProfit(newValue);
+        const newValue = Number((Number(current) + delta * step).toFixed(5));
+        setTakeProfit(String(newValue));
     };
 
     const adjustStopLoss = (delta: number) => {
@@ -161,31 +176,38 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
         const basePrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
         const step = basePrice * 0.0001;
         const current = stopLoss || basePrice;
-        const newValue = Number((current + delta * step).toFixed(5));
-        setStopLoss(newValue);
+        const newValue = Number((Number(current) + delta * step).toFixed(5));
+        setStopLoss(String(newValue));
     };
 
     const handlePlaceOrder = useCallback(async () => {
-        if (!selectedSymbolPrice || !side) return;
+        if (!selectedSymbolPrice || !side || isOrderPlacing) return;
 
         const currentPrice = side === 'buy' ? selectedSymbolPrice.buy : selectedSymbolPrice.sell;
 
-        const validationError = validateTpSl(side, currentPrice, takeProfit, stopLoss);
+        const validationError = validateTpSl(side, currentPrice, Number(takeProfit), Number(stopLoss));
         if (validationError) {
             setError(validationError);
             toast.error('Validation Error', { description: validationError });
             return;
         }
+
+        const validateVolumeError = validateVolume(volume);
+        if (validateVolumeError) {
+            setVolumeWarning(validateVolumeError);
+            return;
+        }
+
         setIsOrderPlacing(true);
         try {
             await placeOrder({
                 walletId: wallet?.id,
                 instrument: normalizeSymbol(selectedSymbol),
                 price: currentPrice,
-                sl: stopLoss,
-                tp: takeProfit,
+                sl: stopLoss && isFinite(Number(stopLoss)) ? Number(stopLoss) : undefined,
+                tp: takeProfit && isFinite(Number(takeProfit)) ? Number(takeProfit) : undefined,
                 type: side === 'buy' ? 0 : 1,
-                volume,
+                volume: Number(volume),
             });
 
             toast.success('Order placed successfully', {
@@ -208,11 +230,13 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
         side,
         takeProfit,
         stopLoss,
+        volume,
         setIsOrderPlacing,
+        isOrderPlacing,
         setError,
+        setVolumeWarning,
         wallet?.id,
         selectedSymbol,
-        volume,
     ]);
 
     if (!selectedSymbolPrice?.buy || !selectedSymbolPrice?.sell) {
@@ -233,7 +257,13 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                 </button>
             </div>
 
-            <form className="space-y-4 p-4" onSubmit={e => e.preventDefault()}>
+            <form
+                className="space-y-4 p-4"
+                onSubmit={e => {
+                    e.preventDefault();
+                    handlePlaceOrder();
+                }}
+            >
                 <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <Button
@@ -299,7 +329,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                     <label className="text-sm font-medium text-gray-900">Volume</label>
                     <div className="flex items-center overflow-hidden rounded-sm border border-gray-200">
                         <Input
-                            type="number"
+                            type="text"
                             name="volume"
                             value={volume}
                             onChange={handleInputChange}
@@ -326,6 +356,9 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                             +
                         </Button>
                     </div>
+                    {volumeWarning && (
+                        <div className="mt-1 ml-1 flex items-center gap-1 text-xs text-amber-600">{volumeWarning}</div>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -335,12 +368,12 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                     </div>
                     <div className="flex items-center gap-2 overflow-hidden rounded-sm border border-gray-200">
                         <Input
-                            onSelect={() => {
-                                if (!side || !selectedSymbolPrice) return;
+                            onFocus={() => {
+                                if (!side || !selectedSymbolPrice || takeProfit) return;
                                 const data = calculateTpandSl(side, selectedSymbolPrice);
-                                setTakeProfit(Number(data.tp.toFixed(2)));
+                                setTakeProfit(String(data.tp.toFixed(2)));
                             }}
-                            type="number"
+                            type="text"
                             name="takeProfit"
                             value={takeProfit ?? ''}
                             onChange={handleInputChange}
@@ -378,12 +411,12 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
                     </div>
                     <div className="flex items-center gap-2 overflow-hidden rounded-sm border border-gray-200">
                         <Input
-                            onSelect={() => {
-                                if (!side || !selectedSymbolPrice) return;
+                            onFocus={() => {
+                                if (!side || !selectedSymbolPrice || stopLoss) return;
                                 const data = calculateTpandSl(side, selectedSymbolPrice);
-                                setStopLoss(Number(data.sl.toFixed(2)));
+                                setStopLoss(String(data.sl.toFixed(2)));
                             }}
-                            type="number"
+                            type="text"
                             name="stopLoss"
                             value={stopLoss ?? ''}
                             onChange={handleInputChange}
@@ -420,7 +453,7 @@ export default function BidPanel({ onClose }: { onClose: () => void }) {
 
                 <div className="flex flex-col gap-2">
                     <Button
-                        onClick={handlePlaceOrder}
+                        type="submit"
                         disabled={isOrderPlacing || !selectedSymbolPrice || !wallet?.id}
                         variant={'outline'}
                         className={cn(
