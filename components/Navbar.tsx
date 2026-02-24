@@ -60,7 +60,7 @@ export default function Navbar() {
     return (
         <div className="flex h-16 w-full items-center justify-between px-4">
             <div className="flex items-center justify-between gap-6">
-                <h1 className="text-4xl font-semibold text-yellow-500">Exness</h1>
+                <h1 className="text-4xl font-semibold text-yellow-500">TradeX</h1>
 
                 <div className="max-w-3xl">
                     <RecentlyOpenedInstruments />

@@ -9,7 +9,7 @@ export default function LandingNavbar() {
                     className="group flex items-center gap-2 transition-transform duration-300 active:scale-95"
                 >
                     <span className="font-serif text-2xl font-bold tracking-tight text-slate-900 italic transition-colors group-hover:text-blue-600">
-                        Exness
+                        TradeX
                     </span>
                 </Link>
 

@@ -5,7 +5,7 @@ export default function LandingFooter() {
         <footer className="w-full">
             <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-gray-500 md:flex-row">
                 <div className="flex items-center gap-2">
-                    <span className="font-serif text-lg font-bold text-gray-900 italic">Exness</span>
+                    <span className="font-serif text-lg font-bold text-gray-900 italic">TradeX</span>
                     <span className="mt-1">&copy; {new Date().getFullYear()}</span>
                 </div>
 
