@@ -14,20 +14,20 @@ export default function LandingFooter() {
                     <Link
                         href="https://x.com/pryxnsu"
                         target="_blank"
-                        className="text-gray-600 transition-colors hover:text-gray-900"
+                        className="text-gray-600 transition-colors hover:text-emerald-700"
                     >
                         Priyanshu Kumar
                     </Link>
                 </div>
 
                 <div className="flex gap-6">
-                    <Link href="#" className="transition-colors hover:text-gray-900">
+                    <Link href="#" className="transition-colors hover:text-emerald-700">
                         Terms
                     </Link>
-                    <Link href="#" className="transition-colors hover:text-gray-900">
+                    <Link href="#" className="transition-colors hover:text-emerald-700">
                         Privacy
                     </Link>
-                    <Link href="#" className="transition-colors hover:text-gray-900">
+                    <Link href="#" className="transition-colors hover:text-emerald-700">
                         Contact
                     </Link>
                 </div>
