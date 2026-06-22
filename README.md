@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TradeX
 
-## Getting Started
+A modern trading platform inspired by Exness, built with a distributed architecture for real-time trading, market data streaming.
 
-First, run the development server:
+> **Note:** This repository contains only the frontend application. TradeX is composed of multiple services that work together to provide the complete trading experience.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Architecture
+
+```text
+Frontend (this repo)
+        │
+        ├── HTTP Server (REST APIs)
+        ├── WebSocket Server (Real-time updates)
+        └── Layer (Background processing)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔗 Related Repositories
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Repository                                                   | Description                                                                                                                |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| [Frontend](https://github.com/pryxnsu/tradex-frontend)       | User-facing web application                                                                                                |
+| [HTTP Server](https://github.com/pryxnsu/exness-http-server) | REST API server handling authentication, accounts, orders, and trading operations                                          |
+| [WebSocket Server](https://github.com/pryxnsu/exness-ws)     | Maintains client WebSocket connections and delivers real-time market updates                                               |
+| [Layer](https://github.com/pryxnsu/exness-layer)             | Fetches live market prices from Alpaca, publishes ticker updates via Redis Pub/Sub, and powers real-time data distribution |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Overview
 
-## Learn More
+The frontend communicates with multiple backend services:
 
-To learn more about Next.js, take a look at the following resources:
+- **HTTP Server** — Handles authentication, user accounts, positions, orders, and trading operations.
+- **WebSocket Server** — Streams live market prices, portfolio updates, and trading events to connected clients.
+- **Layer** — Consumes market data from Alpaca, publishes ticker updates through Redis Pub/Sub, and serves as the market data pipeline for the platform.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### High-Level Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+Alpaca Market Data
+        │
+        ▼
+      Layer
+        │
+ Redis Pub/Sub
+        │
+        ▼
+ WebSocket Server
+        │
+        ▼
+    Frontend
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Together, these services form the complete TradeX platform.
